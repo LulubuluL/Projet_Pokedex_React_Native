@@ -99,8 +99,24 @@ export default function PokemonDetail() {
 
     fetch(url)
       .then((resp) => resp.json())
-      .then((data) => {
-        setPokemon(data);
+      .then(async (data) => {
+        const speciesUrl = data.species.url;
+        const speciesResp = await fetch(speciesUrl);
+        const speciesData = await speciesResp.json();
+
+        const frenchName =
+          speciesData.names.find((n) => n.language.name === "fr")?.name ||
+          speciesData.name;
+
+        const detailedList = {
+          id: data.id,
+          name: frenchName,
+          types: data.types,
+          height: data.height,
+          weight: data.weight,
+          speciesUrl,
+        };
+        setPokemon(detailedList);
         setLoading(false);
       })
       .catch((error) => {
@@ -139,7 +155,7 @@ export default function PokemonDetail() {
           console.log("Le pokemon a été ajouté à l'équipe !");
         }
 
-        console.log("Le pokemon a été ajouté à l'équipe 2 !");
+        console.log("Le pokemon a été ajouté à l'équipe !");
       } else {
         const newTeam = [pokemon];
         AsyncStorage.setItem("pokemonTeam", JSON.stringify(newTeam));
@@ -179,13 +195,13 @@ export default function PokemonDetail() {
     <View style={styles.container}>
       {isInTeam ? (
         <Button
-          title="Remove from team"
+          title="Retirer de l'équipe"
           onPress={removeFromTeam}
           color={"rgba(238,21,21,1)"}
         />
       ) : (
         <Button
-          title="Add to team"
+          title="Ajouter à l'équipe"
           onPress={addToTeam}
           color={"rgba(238,21,21,1)"}
         />
@@ -218,14 +234,14 @@ export default function PokemonDetail() {
         ))}
       </View>
 
-      <Text>Height : {pokemon.height / 10}m</Text>
-      <Text>Weight : {pokemon.weight / 10}kg</Text>
+      <Text>Taille : {pokemon.height / 10}m</Text>
+      <Text>Poids : {pokemon.weight / 10}kg</Text>
 
       <TouchableOpacity
         style={styles.goBack}
         onPress={() => navigation.goBack()}
       >
-        <Text>Go back</Text>
+        <Text>Retour</Text>
       </TouchableOpacity>
       <StatusBar style="auto" />
     </View>

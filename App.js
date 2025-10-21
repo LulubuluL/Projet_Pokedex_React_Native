@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import HomeScreen from "./screens/HomeScreen";
+import TeamScreen from "./screens/TeamScreen";
 import Ionicons from "react-native-vector-icons/Ionicons";
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -42,6 +43,8 @@ export default function App() {
 
             if (route.name === "Pokedex") {
               iconName = focused ? "list" : "list-outline";
+            } else if (route.name === "Team") {
+              iconName = focused ? "ios-people" : "ios-people-outline";
             }
 
             return <Ionicons name={iconName} size={size} color={color} />;
@@ -64,6 +67,7 @@ export default function App() {
         })}
       >
         <Tab.Screen name="Pokedex" component={HomeScreen} />
+        <Tab.Screen name="Team" component={TeamScreen} />
       </Tab.Navigator>
     </NavigationContainer>
   );

@@ -1,4 +1,3 @@
-import React from "react";
 import { TouchableOpacity, Image, Text, StyleSheet } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 
@@ -7,15 +6,15 @@ function capitalize(str) {
 }
 
 export default function PokemonCard({ pokemon }) {
-  //   const navigation = useNavigation();
+  const navigation = useNavigation();
   return (
     <TouchableOpacity
       style={styles.card}
-      //   onPress={() =>
-      //     navigation.navigate("PokemonDetail", {
-      //       id: pokemon.entry_number,
-      //     })
-      //   }
+      onPress={() =>
+        navigation.navigate("PokemonDetail", {
+          id: pokemon.id,
+        })
+      }
     >
       <Image
         style={styles.cardImage}

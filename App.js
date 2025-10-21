@@ -1,89 +1,70 @@
-import { useState, useEffect } from "react";
-import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, View, FlatList } from "react-native";
-import PokemonCard from "./components/PokemonCard";
+import { useEffect } from "react";
+import { NavigationContainer } from "@react-navigation/native";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import HomeScreen from "./screens/HomeScreen";
+import Ionicons from "react-native-vector-icons/Ionicons";
 
-export default function PokemonList() {
-  const [pokemonList, setPokemonList] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as ScreenOrientation from "expo-screen-orientation";
 
+const Tab = createBottomTabNavigator();
+
+export default function App() {
   useEffect(() => {
-    const url = "https://pokeapi.co/api/v2/pokedex/1/";
-    fetch(url)
-      .then((resp) => resp.json())
-      .then(async (data) => {
-        const entries = data.pokemon_entries;
+    async function setInitialOrientation() {
+      try {
+        const orientation = await AsyncStorage.getItem("screenOrientation");
 
-        const detailedList = await Promise.all(
-          entries.map(async (entry) => {
-            const speciesUrl = entry.pokemon_species.url;
-            const speciesResp = await fetch(speciesUrl);
-            const speciesData = await speciesResp.json();
+        if (orientation === null) {
+          await AsyncStorage.setItem("screenOrientation", "unlocked");
+          await ScreenOrientation.unlockAsync();
+        } else if (orientation === "locked") {
+          await ScreenOrientation.lockAsync(
+            ScreenOrientation.OrientationLock.PORTRAIT
+          );
+        } else {
+          await ScreenOrientation.unlockAsync();
+        }
+      } catch (error) {
+        console.error("Error setting screen orientation:", error);
+      }
+    }
 
-            const frenchName =
-              speciesData.names.find((n) => n.language.name === "fr")?.name ||
-              speciesData.name;
-
-            return {
-              id: entry.entry_number,
-              name: frenchName,
-              speciesUrl,
-            };
-          })
-        );
-
-        setPokemonList(detailedList);
-        setLoading(false);
-      })
-      .catch((error) => {
-        console.error("Error fetching data:", error);
-        setError(error);
-        setLoading(false);
-      });
+    setInitialOrientation();
   }, []);
 
-  if (loading) {
-    return <Text>Loading...</Text>;
-  }
-
-  if (error) {
-    return <Text>Error: {error.message}</Text>;
-  }
-
   return (
-    <View style={styles.container}>
-      <FlatList
-        data={pokemonList}
-        renderItem={({ item }) => <PokemonCard pokemon={item} />}
-        keyExtractor={(item) => item.id.toString()}
-        numColumns={2}
-      />
-      <StatusBar style="auto" />
-    </View>
+    <NavigationContainer>
+      <Tab.Navigator
+        screenOptions={({ route }) => ({
+          tabBarIcon: ({ focused, color, size }) => {
+            let iconName;
+
+            if (route.name === "Pokedex") {
+              iconName = focused ? "list" : "list-outline";
+            }
+
+            return <Ionicons name={iconName} size={size} color={color} />;
+          },
+          headerStyle: {
+            backgroundColor: "rgba(238,21,21,1)",
+            shadowColor: "rgba(238,21,21,1)",
+          },
+          headerTintColor: "#fff",
+          tabBarStyle: {
+            backgroundColor: "rgba(238,21,21,1)",
+            shadowColor: "rgba(238,21,21,1)",
+            position: "absolute",
+            borderTopWidth: 0,
+            height: 60,
+            paddingBottom: 10,
+          },
+          tabBarActiveTintColor: "white",
+          tabBarInactiveTintColor: "black",
+        })}
+      >
+        <Tab.Screen name="Pokedex" component={HomeScreen} />
+      </Tab.Navigator>
+    </NavigationContainer>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-    paddingTop: 20,
-  },
-  card: {
-    flex: 1,
-    margin: 10,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#f0f0f0",
-    borderRadius: 10,
-    padding: 10,
-  },
-  cardImage: {
-    width: 100,
-    height: 100,
-  },
-  cardText: {
-    marginTop: 10,
-  },
-});

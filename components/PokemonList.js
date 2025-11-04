@@ -188,6 +188,33 @@ export default function PokemonList() {
         onReset={handleResetFilters}
       />
       
+      <View style={styles.resultHeader}>
+        <Text style={[styles.resultCount, { color: theme.textSecondary }]}>
+          {filteredList.length} Pokémon trouvé{filteredList.length > 1 ? 's' : ''}
+        </Text>
+        
+        <TouchableOpacity
+          style={[
+            styles.favoritesFilterCompact,
+            { backgroundColor: showFavoritesOnly ? '#FFF9E6' : theme.card },
+            showFavoritesOnly && { borderWidth: 1.5, borderColor: '#FFD700' }
+          ]}
+          onPress={() => setShowFavoritesOnly(!showFavoritesOnly)}
+        >
+          <Ionicons 
+            name="star" 
+            size={14} 
+            color={showFavoritesOnly ? "#FFD700" : theme.textSecondary} 
+          />
+          <Text style={[
+            styles.favoritesFilterTextCompact,
+            { color: showFavoritesOnly ? '#333' : theme.textSecondary }
+          ]}>
+            Favoris
+          </Text>
+        </TouchableOpacity>
+      </View>
+      
       {filteredList.length === 0 ? (
         <View style={styles.centerContainer}>
           <Text style={[styles.emptyText, { color: theme.textSecondary }]}>
@@ -200,42 +227,13 @@ export default function PokemonList() {
           )}
         </View>
       ) : (
-        <>
-          <View style={styles.resultHeader}>
-            <Text style={[styles.resultCount, { color: theme.textSecondary }]}>
-              {filteredList.length} Pokémon trouvé{filteredList.length > 1 ? 's' : ''}
-            </Text>
-            
-            <TouchableOpacity
-              style={[
-                styles.favoritesFilterCompact,
-                { backgroundColor: showFavoritesOnly ? '#FFF9E6' : theme.card },
-                showFavoritesOnly && { borderWidth: 1.5, borderColor: '#FFD700' }
-              ]}
-              onPress={() => setShowFavoritesOnly(!showFavoritesOnly)}
-            >
-              <Ionicons 
-                name="star" 
-                size={14} 
-                color={showFavoritesOnly ? "#FFD700" : theme.textSecondary} 
-              />
-              <Text style={[
-                styles.favoritesFilterTextCompact,
-                { color: showFavoritesOnly ? '#333' : theme.textSecondary }
-              ]}>
-                Favoris
-              </Text>
-            </TouchableOpacity>
-          </View>
-          
-          <FlatList
-            data={filteredList}
-            renderItem={({ item, index }) => <PokemonCard pokemon={item} index={index} />}
-            keyExtractor={(item) => item.id.toString()}
-            numColumns={2}
-            contentContainerStyle={styles.listContent}
-          />
-        </>
+        <FlatList
+          data={filteredList}
+          renderItem={({ item, index }) => <PokemonCard pokemon={item} index={index} />}
+          keyExtractor={(item) => item.id.toString()}
+          numColumns={2}
+          contentContainerStyle={styles.listContent}
+        />
       )}
       <StatusBar style="auto" />
     </View>

@@ -1,7 +1,13 @@
 import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, View, TouchableOpacity, FlatList } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  TouchableOpacity,
+  FlatList,
+} from "react-native";
 import { useTeam } from "../contexts/TeamContext";
-import PokemonCardTeam from "../components/PokemonCardTeam";
+import PokemonCard from "../components/PokemonCard";
 
 export default function PokemonTeam() {
   const { team, clearTeam } = useTeam();
@@ -11,10 +17,7 @@ export default function PokemonTeam() {
       <View style={styles.header}>
         <Text style={styles.title}>Votre équipe ({team.length}/6)</Text>
         {team.length > 0 && (
-          <TouchableOpacity
-            style={styles.clearButton}
-            onPress={clearTeam}
-          >
+          <TouchableOpacity style={styles.clearButton} onPress={clearTeam}>
             <Text style={styles.clearButtonText}>Vider l'équipe</Text>
           </TouchableOpacity>
         )}
@@ -27,7 +30,7 @@ export default function PokemonTeam() {
       ) : (
         <FlatList
           data={team}
-          renderItem={({ item }) => <PokemonCardTeam pokemon={item} />}
+          renderItem={({ item }) => <PokemonCard pokemon={item} />}
           keyExtractor={(item) => item.id.toString()}
           numColumns={2}
         />

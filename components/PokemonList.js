@@ -1,9 +1,21 @@
 import { useState, useEffect } from "react";
 import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, View, FlatList, ActivityIndicator } from "react-native";
+import { 
+  StyleSheet, 
+  Text, 
+  View, 
+  FlatList, 
+  ActivityIndicator,
+  TouchableOpacity 
+} from "react-native";
 import PokemonCard from "./PokemonCard";
 import TypeFilter from "./TypeFilter";
 import SearchBar from "./SearchBar";
+import { 
+  getCachedPokemonList, 
+  setCachedPokemonList,
+  clearPokemonCache 
+} from "../services/pokemonCache";
 
 export default function PokemonList() {
   const [pokemonList, setPokemonList] = useState([]);
@@ -12,14 +24,35 @@ export default function PokemonList() {
   const [error, setError] = useState(null);
   const [selectedTypes, setSelectedTypes] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [fromCache, setFromCache] = useState(false);
 
   useEffect(() => {
-    fetchPokemonList();
+    loadPokemonList();
   }, []);
 
   useEffect(() => {
     applyFilters();
   }, [selectedTypes, searchQuery, pokemonList]);
+
+  async function loadPokemonList() {
+    try {
+      const cachedData = await getCachedPokemonList();
+      
+      if (cachedData) {
+        setPokemonList(cachedData);
+        setFilteredList(cachedData);
+        setFromCache(true);
+        setLoading(false);
+        return;
+      }
+      
+      await fetchPokemonList();
+    } catch (err) {
+      console.error("Error loading pokemon list:", err);
+      setError(err);
+      setLoading(false);
+    }
+  }
 
   async function fetchPokemonList() {
     try {
@@ -50,11 +83,14 @@ export default function PokemonList() {
         })
       );
 
+      await setCachedPokemonList(detailedList);
       setPokemonList(detailedList);
       setFilteredList(detailedList);
+      setFromCache(false);
     } catch (err) {
       console.error("Error fetching data:", err);
       setError(err);
+      throw err;
     } finally {
       setLoading(false);
     }
@@ -110,6 +146,12 @@ export default function PokemonList() {
     return (
       <View style={styles.centerContainer}>
         <Text style={styles.errorText}>Erreur: {error.message}</Text>
+        <TouchableOpacity 
+          style={styles.retryButton}
+          onPress={loadPokemonList}
+        >
+          <Text style={styles.retryButtonText}>Réessayer</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -182,6 +224,8 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: 16,
     color: "rgba(238,21,21,1)",
+    textAlign: 'center',
+    marginBottom: 20,
   },
   emptyText: {
     fontSize: 18,
@@ -201,5 +245,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     fontWeight: '500',
+  },
+  retryButton: {
+    backgroundColor: 'rgba(238,21,21,1)',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    marginTop: 16,
+  },
+  retryButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
   },
 });

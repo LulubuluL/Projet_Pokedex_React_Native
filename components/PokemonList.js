@@ -3,6 +3,7 @@ import { StatusBar } from "expo-status-bar";
 import { StyleSheet, Text, View, FlatList, ActivityIndicator } from "react-native";
 import PokemonCard from "./PokemonCard";
 import TypeFilter from "./TypeFilter";
+import SearchBar from "./SearchBar";
 
 export default function PokemonList() {
   const [pokemonList, setPokemonList] = useState([]);
@@ -10,14 +11,15 @@ export default function PokemonList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedTypes, setSelectedTypes] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     fetchPokemonList();
   }, []);
 
   useEffect(() => {
-    filterPokemon();
-  }, [selectedTypes, pokemonList]);
+    applyFilters();
+  }, [selectedTypes, searchQuery, pokemonList]);
 
   async function fetchPokemonList() {
     try {
@@ -58,16 +60,25 @@ export default function PokemonList() {
     }
   }
 
-  function filterPokemon() {
-    if (selectedTypes.length === 0) {
-      setFilteredList(pokemonList);
-      return;
+  function applyFilters() {
+    let result = [...pokemonList];
+
+    if (selectedTypes.length > 0) {
+      result = result.filter((pokemon) =>
+        selectedTypes.every((selectedType) => pokemon.types.includes(selectedType))
+      );
     }
 
-    const filtered = pokemonList.filter((pokemon) =>
-      selectedTypes.every((selectedType) => pokemon.types.includes(selectedType))
-    );
-    setFilteredList(filtered);
+    if (searchQuery.trim().length > 0) {
+      const query = searchQuery.toLowerCase().trim();
+      result = result.filter((pokemon) => {
+        const nameMatch = pokemon.name.toLowerCase().includes(query);
+        const idMatch = pokemon.id.toString().includes(query);
+        return nameMatch || idMatch;
+      });
+    }
+
+    setFilteredList(result);
   }
 
   function handleTypeToggle(type) {
@@ -80,6 +91,10 @@ export default function PokemonList() {
 
   function handleResetFilters() {
     setSelectedTypes([]);
+  }
+
+  function handleSearchClear() {
+    setSearchQuery('');
   }
 
   if (loading) {
@@ -101,6 +116,12 @@ export default function PokemonList() {
 
   return (
     <View style={styles.container}>
+      <SearchBar
+        value={searchQuery}
+        onChangeText={setSearchQuery}
+        onClear={handleSearchClear}
+      />
+      
       <TypeFilter
         selectedTypes={selectedTypes}
         onTypeToggle={handleTypeToggle}
@@ -110,17 +131,27 @@ export default function PokemonList() {
       {filteredList.length === 0 ? (
         <View style={styles.centerContainer}>
           <Text style={styles.emptyText}>
-            Aucun Pokémon trouvé avec {selectedTypes.length > 1 ? 'ces types combinés' : 'ce type'}
+            Aucun Pokémon trouvé
           </Text>
+          {(searchQuery || selectedTypes.length > 0) && (
+            <Text style={styles.emptySubtext}>
+              Essayez de modifier votre recherche ou vos filtres
+            </Text>
+          )}
         </View>
       ) : (
-        <FlatList
-          data={filteredList}
-          renderItem={({ item }) => <PokemonCard pokemon={item} />}
-          keyExtractor={(item) => item.id.toString()}
-          numColumns={2}
-          contentContainerStyle={styles.listContent}
-        />
+        <>
+          <Text style={styles.resultCount}>
+            {filteredList.length} Pokémon trouvé{filteredList.length > 1 ? 's' : ''}
+          </Text>
+          <FlatList
+            data={filteredList}
+            renderItem={({ item }) => <PokemonCard pokemon={item} />}
+            keyExtractor={(item) => item.id.toString()}
+            numColumns={2}
+            contentContainerStyle={styles.listContent}
+          />
+        </>
       )}
       <StatusBar style="auto" />
     </View>
@@ -137,6 +168,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#fff",
+    paddingHorizontal: 20,
   },
   listContent: {
     paddingTop: 10,
@@ -152,9 +184,22 @@ const styles = StyleSheet.create({
     color: "rgba(238,21,21,1)",
   },
   emptyText: {
-    fontSize: 16,
+    fontSize: 18,
     color: "#666",
     textAlign: "center",
-    paddingHorizontal: 20,
+    fontWeight: '600',
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: "#999",
+    textAlign: "center",
+    marginTop: 8,
+  },
+  resultCount: {
+    fontSize: 14,
+    color: "#666",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    fontWeight: '500',
   },
 });

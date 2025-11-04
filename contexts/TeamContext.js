@@ -1,6 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import {
-  initDatabase,
   getAllTeamPokemon,
   addPokemonToTeam,
   removePokemonFromTeam,
@@ -15,26 +14,19 @@ export function TeamProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    initializeAndLoadTeam();
+    loadTeam();
   }, []);
-
-  async function initializeAndLoadTeam() {
-    try {
-      await initDatabase();
-      await loadTeam();
-    } catch (error) {
-      console.error('Error initializing database:', error);
-    } finally {
-      setLoading(false);
-    }
-  }
 
   async function loadTeam() {
     try {
+      console.log('🔄 Loading team...');
       const teamData = await getAllTeamPokemon();
       setTeam(teamData);
+      console.log('✅ Team loaded:', teamData.length, 'pokemon');
     } catch (error) {
       console.error('Error loading team:', error);
+    } finally {
+      setLoading(false);
     }
   }
 

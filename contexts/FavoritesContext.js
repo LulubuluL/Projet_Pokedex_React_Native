@@ -1,9 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import {
-  initDatabase,
   addToFavorites,
   removeFromFavorites,
-  isFavorite as checkIsFavorite,
   getAllFavorites,
 } from '../database/teamDatabase';
 
@@ -14,26 +12,19 @@ export function FavoritesProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    initializeAndLoadFavorites();
+    loadFavorites();
   }, []);
-
-  async function initializeAndLoadFavorites() {
-    try {
-      await initDatabase();
-      await loadFavorites();
-    } catch (error) {
-      console.error('Error initializing favorites:', error);
-    } finally {
-      setLoading(false);
-    }
-  }
 
   async function loadFavorites() {
     try {
+      console.log('🔄 Loading favorites...');
       const favoriteIds = await getAllFavorites();
       setFavorites(favoriteIds);
+      console.log('✅ Favorites loaded:', favoriteIds.length, 'pokemon');
     } catch (error) {
       console.error('Error loading favorites:', error);
+    } finally {
+      setLoading(false);
     }
   }
 

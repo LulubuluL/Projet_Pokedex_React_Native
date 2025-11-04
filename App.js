@@ -2,6 +2,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import HomeScreen from "./screens/HomeScreen";
 import TeamScreen from "./screens/TeamScreen";
+import QuizScreen from "./screens/QuizScreen";
 import { Ionicons } from '@expo/vector-icons';
 import { TeamProvider } from './contexts/TeamContext';
 import { FavoritesProvider } from './contexts/FavoritesContext';
@@ -23,6 +24,8 @@ function AppNavigator() {
               iconName = focused ? "list" : "list-outline";
             } else if (route.name === "Team") {
               iconName = focused ? "people" : "people-outline";
+            } else if (route.name === "Quiz") {
+              iconName = focused ? "game-controller" : "game-controller-outline";
             }
 
             return <Ionicons name={iconName} size={size} color={color} />;
@@ -43,6 +46,7 @@ function AppNavigator() {
       >
         <Tab.Screen name="Pokedex" component={HomeScreen} />
         <Tab.Screen name="Team" component={TeamScreen} />
+        <Tab.Screen name="Quiz" component={QuizScreen} />
       </Tab.Navigator>
     </NavigationContainer>
   );

@@ -25,7 +25,8 @@
     "react-native": "0.81.4",
     "react-native-safe-area-context": "~5.0.0",
     "react-native-screens": "~4.4.0",
-    "react-native-web": "^0.21.0"
+    "react-native-web": "^0.21.0",
+    "wa-sqlite": "^1.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2"

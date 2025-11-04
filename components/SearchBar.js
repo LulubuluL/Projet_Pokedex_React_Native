@@ -1,13 +1,17 @@
 import { View, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../contexts/ThemeContext';
 
 export default function SearchBar({ value, onChangeText, onClear }) {
+  const { theme } = useTheme();
+
   return (
-    <View style={styles.container}>
-      <Ionicons name="search" size={20} color="#666" style={styles.icon} />
+    <View style={[styles.container, { backgroundColor: theme.card }]}>
+      <Ionicons name="search" size={20} color={theme.textSecondary} style={styles.icon} />
       <TextInput
-        style={styles.input}
+        style={[styles.input, { color: theme.text }]}
         placeholder="Rechercher par nom ou numéro..."
+        placeholderTextColor={theme.textTertiary}
         value={value}
         onChangeText={onChangeText}
         autoCapitalize="none"
@@ -15,7 +19,7 @@ export default function SearchBar({ value, onChangeText, onClear }) {
       />
       {value.length > 0 && (
         <TouchableOpacity onPress={onClear} style={styles.clearButton}>
-          <Ionicons name="close-circle" size={20} color="#666" />
+          <Ionicons name="close-circle" size={20} color={theme.textSecondary} />
         </TouchableOpacity>
       )}
     </View>
@@ -24,12 +28,13 @@ export default function SearchBar({ value, onChangeText, onClear }) {
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
     borderRadius: 10,
-    marginHorizontal: 16,
+    marginLeft: 16,
     marginVertical: 12,
+    marginRight: 8,
     paddingHorizontal: 12,
     height: 45,
   },
@@ -39,7 +44,6 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 16,
-    color: '#333',
   },
   clearButton: {
     padding: 4,

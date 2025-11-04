@@ -7,17 +7,24 @@ import {
   FlatList,
 } from "react-native";
 import { useTeam } from "../contexts/TeamContext";
+import { useTheme } from "../contexts/ThemeContext";
 import PokemonCard from "../components/PokemonCard";
 
 export default function PokemonTeam() {
   const { team, clearTeam } = useTeam();
+  const { theme } = useTheme();
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Votre équipe ({team.length}/6)</Text>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
+      <View style={[styles.header, { borderBottomColor: theme.border }]}>
+        <Text style={[styles.title, { color: theme.text }]}>
+          Votre équipe ({team.length}/6)
+        </Text>
         {team.length > 0 && (
-          <TouchableOpacity style={styles.clearButton} onPress={clearTeam}>
+          <TouchableOpacity 
+            style={[styles.clearButton, { backgroundColor: theme.primary }]} 
+            onPress={clearTeam}
+          >
             <Text style={styles.clearButtonText}>Vider l'équipe</Text>
           </TouchableOpacity>
         )}
@@ -25,7 +32,9 @@ export default function PokemonTeam() {
 
       {team.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>Aucun Pokémon dans votre équipe</Text>
+          <Text style={[styles.emptyText, { color: theme.textSecondary }]}>
+            Aucun Pokémon dans votre équipe
+          </Text>
         </View>
       ) : (
         <FlatList
@@ -33,6 +42,7 @@ export default function PokemonTeam() {
           renderItem={({ item }) => <PokemonCard pokemon={item} />}
           keyExtractor={(item) => item.id.toString()}
           numColumns={2}
+          contentContainerStyle={styles.listContent}
         />
       )}
 
@@ -44,7 +54,6 @@ export default function PokemonTeam() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
   },
   header: {
     flexDirection: "row",
@@ -52,14 +61,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#e0e0e0",
   },
   title: {
     fontSize: 18,
     fontWeight: "bold",
   },
   clearButton: {
-    backgroundColor: "rgba(238,21,21,1)",
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 5,
@@ -75,6 +82,8 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    color: "#757575",
+  },
+  listContent: {
+    paddingBottom: 80,
   },
 });

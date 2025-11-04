@@ -16,6 +16,7 @@ import { getTypeColor, translateType, getGeneration } from "../constants/pokemon
 import { Ionicons } from '@expo/vector-icons';
 import { useFavorites } from "../contexts/FavoritesContext";
 import { playPokemonCry } from '../services/pokemonSound';
+import { useTheme } from "../contexts/ThemeContext";
 
 function capitalize(str) {
   return str.charAt(0).toUpperCase() + str.slice(1);
@@ -26,6 +27,7 @@ export default function PokemonDetail() {
   const route = useRoute();
   const { id } = route.params;
   const { addPokemon, removePokemon, isPokemonInTeam } = useTeam();
+  const { theme } = useTheme();
 
   const [pokemon, setPokemon] = useState(null);
   const [description, setDescription] = useState("");
@@ -141,15 +143,17 @@ export default function PokemonDetail() {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="rgba(238,21,21,1)" />
-        <Text style={styles.loadingText}>Chargement du Pokémon...</Text>
+      <View style={[styles.loadingContainer, { backgroundColor: theme.background }]}>
+        <ActivityIndicator size="large" color={theme.primary} />
+        <Text style={[styles.loadingText, { color: theme.textSecondary }]}>
+          Chargement du Pokémon...
+        </Text>
       </View>
     );
   }
 
   return (
-    <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
+    <ScrollView style={[styles.scroll, { backgroundColor: theme.background }]} showsVerticalScrollIndicator={false}>
       <View style={styles.container}>
 
         <View style={styles.topButtons}>
@@ -157,7 +161,7 @@ export default function PokemonDetail() {
             style={styles.backButton}
             onPress={() => navigation.goBack()}
           >
-            <Ionicons name="arrow-back" size={24} color="#333" />
+            <Ionicons name="arrow-back" size={24} color={theme.text} />
           </TouchableOpacity>
           
           <TouchableOpacity
@@ -167,7 +171,7 @@ export default function PokemonDetail() {
             <Ionicons 
               name={favorite ? "star" : "star-outline"} 
               size={28} 
-              color={favorite ? "#FFD700" : "#999"} 
+              color={favorite ? "#FFD700" : theme.textTertiary} 
             />
           </TouchableOpacity>
         </View>
@@ -180,23 +184,27 @@ export default function PokemonDetail() {
         />
 
         <TouchableOpacity
-          style={styles.soundButton}
+          style={[styles.soundButton, { backgroundColor: theme.card }]}
           onPress={handlePlayCry}
           disabled={playingSound}
         >
           <Ionicons 
             name={playingSound ? "volume-high" : "volume-medium-outline"} 
             size={24} 
-            color={playingSound ? "rgba(238,21,21,1)" : "#666"} 
+            color={playingSound ? theme.primary : theme.textSecondary} 
           />
-          <Text style={styles.soundButtonText}>
+          <Text style={[styles.soundButtonText, { color: theme.textSecondary }]}>
             {playingSound ? "Lecture..." : "Écouter le cri"}
           </Text>
         </TouchableOpacity>
 
         <View style={styles.headerInfo}>
-          <Text style={styles.pokemonNumber}>#{pokemon.id.toString().padStart(3, '0')}</Text>
-          <Text style={styles.title}>{capitalize(pokemon.name)}</Text>
+          <Text style={[styles.pokemonNumber, { color: theme.textTertiary }]}>
+            #{pokemon.id.toString().padStart(3, '0')}
+          </Text>
+          <Text style={[styles.title, { color: theme.text }]}>
+            {capitalize(pokemon.name)}
+          </Text>
         </View>
 
         <View style={[styles.genBadgeLarge, { backgroundColor: getGeneration(pokemon.id).color }]}>
@@ -219,32 +227,34 @@ export default function PokemonDetail() {
         </View>
 
         {description && (
-          <View style={styles.card}>
-            <Text style={styles.description}>{description}</Text>
+          <View style={[styles.card, { backgroundColor: theme.backgroundSecondary }]}>
+            <Text style={[styles.description, { color: theme.textSecondary }]}>
+              {description}
+            </Text>
           </View>
         )}
 
-        <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Informations</Text>
+        <View style={[styles.card, { backgroundColor: theme.backgroundSecondary }]}>
+          <Text style={[styles.sectionTitle, { color: theme.text }]}>Informations</Text>
           <View style={styles.infoRow}>
             <View style={styles.infoItem}>
-              <Text style={styles.infoLabel}>Taille</Text>
-              <Text style={styles.infoValue}>{pokemon.height} m</Text>
+              <Text style={[styles.infoLabel, { color: theme.textTertiary }]}>Taille</Text>
+              <Text style={[styles.infoValue, { color: theme.text }]}>{pokemon.height} m</Text>
             </View>
-            <View style={styles.infoDivider} />
+            <View style={[styles.infoDivider, { backgroundColor: theme.border }]} />
             <View style={styles.infoItem}>
-              <Text style={styles.infoLabel}>Poids</Text>
-              <Text style={styles.infoValue}>{pokemon.weight} kg</Text>
+              <Text style={[styles.infoLabel, { color: theme.textTertiary }]}>Poids</Text>
+              <Text style={[styles.infoValue, { color: theme.text }]}>{pokemon.weight} kg</Text>
             </View>
           </View>
         </View>
 
-        <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Statistiques</Text>
+        <View style={[styles.card, { backgroundColor: theme.backgroundSecondary }]}>
+          <Text style={[styles.sectionTitle, { color: theme.text }]}>Statistiques</Text>
           {pokemon.stats.map((s) => (
             <View key={s.name} style={styles.statRow}>
-              <Text style={styles.statName}>{s.name}</Text>
-              <View style={styles.statBarContainer}>
+              <Text style={[styles.statName, { color: theme.textSecondary }]}>{s.name}</Text>
+              <View style={[styles.statBarContainer, { backgroundColor: theme.border }]}>
                 <View 
                   style={[
                     styles.statBar, 
@@ -255,14 +265,14 @@ export default function PokemonDetail() {
                   ]} 
                 />
               </View>
-              <Text style={styles.statValue}>{s.value}</Text>
+              <Text style={[styles.statValue, { color: theme.text }]}>{s.value}</Text>
             </View>
           ))}
         </View>
 
         {weaknesses.length > 0 && (
-          <View style={styles.card}>
-            <Text style={styles.sectionTitle}>Faiblesses</Text>
+          <View style={[styles.card, { backgroundColor: theme.backgroundSecondary }]}>
+            <Text style={[styles.sectionTitle, { color: theme.text }]}>Faiblesses</Text>
             <View style={styles.typesContainer}>
               {weaknesses.map((w) => (
                 <View
@@ -279,8 +289,8 @@ export default function PokemonDetail() {
         )}
 
         {evolutions.length > 1 && (
-          <View style={styles.card}>
-            <Text style={styles.sectionTitle}>Évolutions</Text>
+          <View style={[styles.card, { backgroundColor: theme.backgroundSecondary }]}>
+            <Text style={[styles.sectionTitle, { color: theme.text }]}>Évolutions</Text>
             <View style={styles.evoContainer}>
               {evolutions.map((e, index) => (
                 <View key={e.id} style={styles.evoWrapper}>
@@ -294,10 +304,12 @@ export default function PokemonDetail() {
                         uri: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${e.id}.png`,
                       }}
                     />
-                    <Text style={styles.evoName}>{capitalize(e.name)}</Text>
+                    <Text style={[styles.evoName, { color: theme.text }]}>
+                      {capitalize(e.name)}
+                    </Text>
                   </TouchableOpacity>
                   {index < evolutions.length - 1 && (
-                    <Ionicons name="arrow-forward" size={20} color="#999" style={styles.evoArrow} />
+                    <Ionicons name="arrow-forward" size={20} color={theme.textTertiary} style={styles.evoArrow} />
                   )}
                 </View>
               ))}
@@ -324,7 +336,6 @@ export default function PokemonDetail() {
 const styles = StyleSheet.create({
   scroll: {
     flex: 1,
-    backgroundColor: "#fff",
   },
   container: {
     alignItems: "center",
@@ -335,17 +346,13 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#fff",
   },
   loadingText: {
     marginTop: 12,
     fontSize: 16,
-    color: "#666",
   },
   backButton: {
-    alignSelf: "flex-start",
     padding: 8,
-    marginBottom: 8,
   },
   image: {
     width: 180,
@@ -358,13 +365,11 @@ const styles = StyleSheet.create({
   },
   pokemonNumber: {
     fontSize: 16,
-    color: "#999",
     fontWeight: "600",
   },
   title: {
     fontSize: 32,
     fontWeight: "bold",
-    color: "#333",
     marginTop: 4,
   },
   typesContainer: {
@@ -397,7 +402,6 @@ const styles = StyleSheet.create({
   },
   card: {
     width: "100%",
-    backgroundColor: "#f8f8f8",
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
@@ -405,13 +409,11 @@ const styles = StyleSheet.create({
   description: {
     fontSize: 15,
     lineHeight: 22,
-    color: "#555",
     textAlign: "center",
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#333",
     marginBottom: 12,
   },
   infoRow: {
@@ -426,17 +428,14 @@ const styles = StyleSheet.create({
   infoDivider: {
     width: 1,
     height: 40,
-    backgroundColor: "#ddd",
   },
   infoLabel: {
     fontSize: 14,
-    color: "#999",
     marginBottom: 4,
   },
   infoValue: {
     fontSize: 20,
     fontWeight: "bold",
-    color: "#333",
   },
   statRow: {
     flexDirection: "row",
@@ -447,12 +446,10 @@ const styles = StyleSheet.create({
     width: 80,
     fontSize: 14,
     fontWeight: "600",
-    color: "#555",
   },
   statBarContainer: {
     flex: 1,
     height: 8,
-    backgroundColor: "#e0e0e0",
     borderRadius: 4,
     marginHorizontal: 10,
     overflow: "hidden",
@@ -466,7 +463,6 @@ const styles = StyleSheet.create({
     textAlign: "right",
     fontSize: 14,
     fontWeight: "bold",
-    color: "#333",
   },
   evoContainer: {
     flexDirection: "row",
@@ -489,7 +485,6 @@ const styles = StyleSheet.create({
   evoName: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#333",
     marginTop: 4,
   },
   evoArrow: {
@@ -540,7 +535,6 @@ const styles = StyleSheet.create({
   soundButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f0f0f0',
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 20,
@@ -551,6 +545,5 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     fontSize: 14,
     fontWeight: '600',
-    color: '#666',
   },
 });

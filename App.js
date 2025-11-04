@@ -5,49 +5,57 @@ import TeamScreen from "./screens/TeamScreen";
 import { Ionicons } from '@expo/vector-icons';
 import { TeamProvider } from './contexts/TeamContext';
 import { FavoritesProvider } from './contexts/FavoritesContext';
+import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 
 const Tab = createBottomTabNavigator();
 
+function AppNavigator() {
+  const { theme } = useTheme();
+
+  return (
+    <NavigationContainer>
+      <Tab.Navigator
+        screenOptions={({ route }) => ({
+          tabBarIcon: ({ focused, color, size }) => {
+            let iconName;
+
+            if (route.name === "Pokedex") {
+              iconName = focused ? "list" : "list-outline";
+            } else if (route.name === "Team") {
+              iconName = focused ? "people" : "people-outline";
+            }
+
+            return <Ionicons name={iconName} size={size} color={color} />;
+          },
+          headerStyle: {
+            backgroundColor: theme.primary,
+          },
+          headerTintColor: "#fff",
+          tabBarStyle: {
+            backgroundColor: theme.primary,
+            borderTopWidth: 0,
+            height: 60,
+            paddingBottom: 10,
+          },
+          tabBarActiveTintColor: "white",
+          tabBarInactiveTintColor: "rgba(255,255,255,0.6)",
+        })}
+      >
+        <Tab.Screen name="Pokedex" component={HomeScreen} />
+        <Tab.Screen name="Team" component={TeamScreen} />
+      </Tab.Navigator>
+    </NavigationContainer>
+  );
+}
+
 export default function App() {
   return (
-    <TeamProvider>
-      <FavoritesProvider>
-        <NavigationContainer>
-          <Tab.Navigator
-            screenOptions={({ route }) => ({
-              tabBarIcon: ({ focused, color, size }) => {
-                let iconName;
-
-                if (route.name === "Pokedex") {
-                  iconName = focused ? "list" : "list-outline";
-                } else if (route.name === "Mon équipe") {
-                  iconName = focused ? "people" : "people-outline";
-                }
-
-                return <Ionicons name={iconName} size={size} color={color} />;
-              },
-              headerStyle: {
-                backgroundColor: "rgba(238,21,21,1)",
-                shadowColor: "rgba(238,21,21,1)",
-              },
-              headerTintColor: "#fff",
-              tabBarStyle: {
-                backgroundColor: "rgba(238,21,21,1)",
-                shadowColor: "rgba(238,21,21,1)",
-                position: "absolute",
-                borderTopWidth: 0,
-                height: 60,
-                paddingBottom: 10,
-              },
-              tabBarActiveTintColor: "white",
-              tabBarInactiveTintColor: "black",
-            })}
-          >
-            <Tab.Screen name="Pokedex" component={HomeScreen} />
-            <Tab.Screen name="Mon équipe" component={TeamScreen} />
-          </Tab.Navigator>
-        </NavigationContainer>
-      </FavoritesProvider>
-    </TeamProvider>
+    <ThemeProvider>
+      <TeamProvider>
+        <FavoritesProvider>
+          <AppNavigator />
+        </FavoritesProvider>
+      </TeamProvider>
+    </ThemeProvider>
   );
 }

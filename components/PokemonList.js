@@ -12,12 +12,14 @@ import { Ionicons } from '@expo/vector-icons';
 import PokemonCard from "./PokemonCard";
 import TypeFilter from "./TypeFilter";
 import SearchBar from "./SearchBar";
+import ThemeToggle from "./ThemeToggle";
 import { 
   getCachedPokemonList, 
   setCachedPokemonList,
   clearPokemonCache 
 } from "../services/pokemonCache";
 import { useFavorites } from "../contexts/FavoritesContext";
+import { useTheme } from "../contexts/ThemeContext";
 
 export default function PokemonList() {
   const [pokemonList, setPokemonList] = useState([]);
@@ -29,6 +31,7 @@ export default function PokemonList() {
   const [fromCache, setFromCache] = useState(false);
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const { favorites } = useFavorites();
+  const { theme } = useTheme();
 
   useEffect(() => {
     loadPokemonList();
@@ -143,19 +146,23 @@ export default function PokemonList() {
 
   if (loading) {
     return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="rgba(238,21,21,1)" />
-        <Text style={styles.loadingText}>Chargement des Pokémon...</Text>
+      <View style={[styles.centerContainer, { backgroundColor: theme.background }]}>
+        <ActivityIndicator size="large" color={theme.primary} />
+        <Text style={[styles.loadingText, { color: theme.textSecondary }]}>
+          Chargement des Pokémon...
+        </Text>
       </View>
     );
   }
 
   if (error) {
     return (
-      <View style={styles.centerContainer}>
-        <Text style={styles.errorText}>Erreur: {error.message}</Text>
+      <View style={[styles.centerContainer, { backgroundColor: theme.background }]}>
+        <Text style={[styles.errorText, { color: theme.error }]}>
+          Erreur: {error.message}
+        </Text>
         <TouchableOpacity 
-          style={styles.retryButton}
+          style={[styles.retryButton, { backgroundColor: theme.primary }]}
           onPress={loadPokemonList}
         >
           <Text style={styles.retryButtonText}>Réessayer</Text>
@@ -165,17 +172,21 @@ export default function PokemonList() {
   }
 
   return (
-    <View style={styles.container}>
-      <SearchBar
-        value={searchQuery}
-        onChangeText={setSearchQuery}
-        onClear={handleSearchClear}
-      />
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
+      <View style={styles.headerRow}>
+        <SearchBar
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          onClear={handleSearchClear}
+        />
+        <ThemeToggle />
+      </View>
 
       <View style={styles.favoritesFilterContainer}>
         <TouchableOpacity
           style={[
             styles.favoritesFilter,
+            { backgroundColor: theme.card },
             showFavoritesOnly && styles.favoritesFilterActive
           ]}
           onPress={() => setShowFavoritesOnly(!showFavoritesOnly)}
@@ -183,11 +194,12 @@ export default function PokemonList() {
           <Ionicons 
             name="star" 
             size={20} 
-            color={showFavoritesOnly ? "#FFD700" : "#666"} 
+            color={showFavoritesOnly ? "#FFD700" : theme.textSecondary} 
           />
           <Text style={[
             styles.favoritesFilterText,
-            showFavoritesOnly && styles.favoritesFilterTextActive
+            { color: theme.textSecondary },
+            showFavoritesOnly && { color: theme.text }
           ]}>
             Favoris uniquement
           </Text>
@@ -202,18 +214,18 @@ export default function PokemonList() {
       
       {filteredList.length === 0 ? (
         <View style={styles.centerContainer}>
-          <Text style={styles.emptyText}>
+          <Text style={[styles.emptyText, { color: theme.textSecondary }]}>
             Aucun Pokémon trouvé
           </Text>
           {(searchQuery || selectedTypes.length > 0) && (
-            <Text style={styles.emptySubtext}>
+            <Text style={[styles.emptySubtext, { color: theme.textTertiary }]}>
               Essayez de modifier votre recherche ou vos filtres
             </Text>
           )}
         </View>
       ) : (
         <>
-          <Text style={styles.resultCount}>
+          <Text style={[styles.resultCount, { color: theme.textSecondary }]}>
             {filteredList.length} Pokémon trouvé{filteredList.length > 1 ? 's' : ''}
           </Text>
           <FlatList
@@ -233,13 +245,16 @@ export default function PokemonList() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingRight: 4,
   },
   centerContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#fff",
     paddingHorizontal: 20,
   },
   listContent: {
@@ -249,35 +264,29 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 16,
-    color: "#666",
   },
   errorText: {
     fontSize: 16,
-    color: "rgba(238,21,21,1)",
     textAlign: 'center',
     marginBottom: 20,
   },
   emptyText: {
     fontSize: 18,
-    color: "#666",
     textAlign: "center",
     fontWeight: '600',
   },
   emptySubtext: {
     fontSize: 14,
-    color: "#999",
     textAlign: "center",
     marginTop: 8,
   },
   resultCount: {
     fontSize: 14,
-    color: "#666",
     paddingHorizontal: 16,
     paddingVertical: 8,
     fontWeight: '500',
   },
   retryButton: {
-    backgroundColor: 'rgba(238,21,21,1)',
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 8,
@@ -295,7 +304,6 @@ const styles = StyleSheet.create({
   favoritesFilter: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f0f0f0',
     paddingVertical: 10,
     paddingHorizontal: 16,
     borderRadius: 20,
@@ -310,9 +318,5 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     fontSize: 14,
     fontWeight: '600',
-    color: '#666',
-  },
-  favoritesFilterTextActive: {
-    color: '#333',
   },
 });

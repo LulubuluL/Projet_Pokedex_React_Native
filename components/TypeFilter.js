@@ -10,19 +10,27 @@ import {
   getTypeColor,
   translateType,
 } from "../constants/pokemonTypes";
+import { useTheme } from "../contexts/ThemeContext";
 
 export default function TypeFilter({ selectedTypes, onTypeToggle, onReset }) {
+  const { theme } = useTheme();
+  
   const sortedTypes = [...POKEMON_TYPES].sort((a, b) => {
     return translateType(a).localeCompare(translateType(b));
   });
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { 
+      backgroundColor: theme.background, 
+      borderBottomColor: theme.border 
+    }]}>
       <View style={styles.header}>
-        <Text style={styles.title}>Filtrer par type</Text>
+        <Text style={[styles.title, { color: theme.text }]}>Filtrer par type</Text>
         {selectedTypes.length > 0 && (
           <TouchableOpacity onPress={onReset} style={styles.resetButton}>
-            <Text style={styles.resetText}>Réinitialiser</Text>
+            <Text style={[styles.resetText, { color: theme.primary }]}>
+              Réinitialiser
+            </Text>
           </TouchableOpacity>
         )}
       </View>
@@ -40,9 +48,9 @@ export default function TypeFilter({ selectedTypes, onTypeToggle, onReset }) {
               style={[
                 styles.typeButton,
                 {
-                  backgroundColor: isSelected ? getTypeColor(type) : "#f0f0f0",
+                  backgroundColor: isSelected ? getTypeColor(type) : theme.card,
                   borderWidth: isSelected ? 0 : 1,
-                  borderColor: "#ddd",
+                  borderColor: theme.border,
                 },
               ]}
               onPress={() => onTypeToggle(type)}
@@ -50,7 +58,7 @@ export default function TypeFilter({ selectedTypes, onTypeToggle, onReset }) {
               <Text
                 style={[
                   styles.typeText,
-                  { color: isSelected ? "white" : "#333" },
+                  { color: isSelected ? "white" : theme.text },
                 ]}
               >
                 {translateType(type)}
@@ -65,10 +73,8 @@ export default function TypeFilter({ selectedTypes, onTypeToggle, onReset }) {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "white",
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#e0e0e0",
   },
   header: {
     flexDirection: "row",
@@ -86,13 +92,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
   resetText: {
-    color: "rgba(238,21,21,1)",
     fontWeight: "600",
     fontSize: 14,
   },
   scrollContent: {
     paddingHorizontal: 16,
-    gap: 8,
   },
   typeButton: {
     paddingVertical: 8,

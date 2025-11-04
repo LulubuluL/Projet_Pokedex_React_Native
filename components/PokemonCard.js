@@ -2,6 +2,7 @@ import { TouchableOpacity, Image, Text, StyleSheet, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { getGeneration } from "../constants/pokemonTypes";
 import { useFavorites } from "../contexts/FavoritesContext";
+import { useTheme } from "../contexts/ThemeContext";
 import { Ionicons } from '@expo/vector-icons';
 
 function capitalize(str) {
@@ -12,6 +13,7 @@ export default function PokemonCard({ pokemon }) {
   const navigation = useNavigation();
   const generation = getGeneration(pokemon.id);
   const { isFavorite, toggleFavorite } = useFavorites();
+  const { theme } = useTheme();
   const favorite = isFavorite(pokemon.id);
   
   function handleFavoritePress(e) {
@@ -21,7 +23,7 @@ export default function PokemonCard({ pokemon }) {
   
   return (
     <TouchableOpacity
-      style={styles.card}
+      style={[styles.card, { backgroundColor: theme.card }]}
       onPress={() =>
         navigation.navigate("PokemonDetail", {
           id: pokemon.id,
@@ -39,7 +41,7 @@ export default function PokemonCard({ pokemon }) {
         <Ionicons 
           name={favorite ? "star" : "star-outline"} 
           size={24} 
-          color={favorite ? "#FFD700" : "#999"} 
+          color={favorite ? "#FFD700" : theme.textTertiary} 
         />
       </TouchableOpacity>
       
@@ -49,10 +51,12 @@ export default function PokemonCard({ pokemon }) {
           uri: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemon.id}.png`,
         }}
       />
-      <Text style={styles.cardNumber}>
+      <Text style={[styles.cardNumber, { color: theme.textSecondary }]}>
         #{pokemon.id.toString().padStart(3, "0")}
       </Text>
-      <Text style={styles.cardText}>{capitalize(pokemon.name)}</Text>
+      <Text style={[styles.cardText, { color: theme.text }]}>
+        {capitalize(pokemon.name)}
+      </Text>
     </TouchableOpacity>
   );
 }
@@ -63,7 +67,6 @@ const styles = StyleSheet.create({
     margin: 10,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#f0f0f0",
     borderRadius: 10,
     padding: 10,
     position: 'relative',
@@ -96,7 +99,6 @@ const styles = StyleSheet.create({
   cardNumber: {
     fontWeight: "bold",
     marginTop: 4,
-    color: '#666',
     fontSize: 12,
   },
   cardText: {

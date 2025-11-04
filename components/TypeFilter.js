@@ -1,7 +1,21 @@
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
-import { POKEMON_TYPES, getTypeColor, translateType } from '../constants/pokemonTypes';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+} from "react-native";
+import {
+  POKEMON_TYPES,
+  getTypeColor,
+  translateType,
+} from "../constants/pokemonTypes";
 
 export default function TypeFilter({ selectedTypes, onTypeToggle, onReset }) {
+  const sortedTypes = [...POKEMON_TYPES].sort((a, b) => {
+    return translateType(a).localeCompare(translateType(b));
+  });
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -12,13 +26,13 @@ export default function TypeFilter({ selectedTypes, onTypeToggle, onReset }) {
           </TouchableOpacity>
         )}
       </View>
-      
-      <ScrollView 
-        horizontal 
+
+      <ScrollView
+        horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        {POKEMON_TYPES.map((type) => {
+        {sortedTypes.map((type) => {
           const isSelected = selectedTypes.includes(type);
           return (
             <TouchableOpacity
@@ -26,9 +40,9 @@ export default function TypeFilter({ selectedTypes, onTypeToggle, onReset }) {
               style={[
                 styles.typeButton,
                 {
-                  backgroundColor: isSelected ? getTypeColor(type) : '#f0f0f0',
+                  backgroundColor: isSelected ? getTypeColor(type) : "#f0f0f0",
                   borderWidth: isSelected ? 0 : 1,
-                  borderColor: '#ddd',
+                  borderColor: "#ddd",
                 },
               ]}
               onPress={() => onTypeToggle(type)}
@@ -36,7 +50,7 @@ export default function TypeFilter({ selectedTypes, onTypeToggle, onReset }) {
               <Text
                 style={[
                   styles.typeText,
-                  { color: isSelected ? 'white' : '#333' },
+                  { color: isSelected ? "white" : "#333" },
                 ]}
               >
                 {translateType(type)}
@@ -51,29 +65,29 @@ export default function TypeFilter({ selectedTypes, onTypeToggle, onReset }) {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: 'white',
+    backgroundColor: "white",
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: "#e0e0e0",
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: 16,
     marginBottom: 8,
   },
   title: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   resetButton: {
     paddingVertical: 4,
     paddingHorizontal: 8,
   },
   resetText: {
-    color: 'rgba(238,21,21,1)',
-    fontWeight: '600',
+    color: "rgba(238,21,21,1)",
+    fontWeight: "600",
     fontSize: 14,
   },
   scrollContent: {
@@ -87,7 +101,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   typeText: {
-    fontWeight: '600',
+    fontWeight: "600",
     fontSize: 14,
   },
 });

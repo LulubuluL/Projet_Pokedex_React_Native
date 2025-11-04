@@ -40,6 +40,7 @@ export const GENERATIONS = [
   { id: 6, name: 'Kalos', range: [650, 721], color: '#FF85B3' },
   { id: 7, name: 'Alola', range: [722, 809], color: '#FFD93D' },
   { id: 8, name: 'Galar', range: [810, 905], color: '#95D5B2' },
+  { id: 9, name: 'Paldea', range: [906, 1025], color: '#FF6B9D' },
 ];
 
 export function getTypeColor(type) {

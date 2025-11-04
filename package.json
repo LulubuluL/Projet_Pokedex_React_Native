@@ -16,6 +16,7 @@
     "@react-navigation/stack": "^7.4.10",
     "expo": "~54.0.14",
     "expo-av": "~16.0.7",
+    "expo-navigation-bar": "~5.0.9",
     "expo-screen-orientation": "~8.0.0",
     "expo-sqlite": "^16.0.9",
     "expo-status-bar": "~3.0.8",

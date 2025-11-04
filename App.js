@@ -1,3 +1,5 @@
+import { useEffect } from 'react';
+import { Platform } from 'react-native';
 import { NavigationContainer } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import HomeScreen from "./screens/HomeScreen";
@@ -7,6 +9,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { TeamProvider } from './contexts/TeamContext';
 import { FavoritesProvider } from './contexts/FavoritesContext';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
+import * as NavigationBar from 'expo-navigation-bar';
 
 const Tab = createBottomTabNavigator();
 
@@ -53,6 +56,13 @@ function AppNavigator() {
 }
 
 export default function App() {
+  useEffect(() => {
+    if (Platform.OS === 'android') {
+      NavigationBar.setVisibilityAsync('hidden');
+      NavigationBar.setBehaviorAsync('overlay-swipe');
+    }
+  }, []);
+
   return (
     <ThemeProvider>
       <TeamProvider>

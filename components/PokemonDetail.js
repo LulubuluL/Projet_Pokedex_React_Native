@@ -93,8 +93,9 @@ export default function PokemonDetail() {
 
   if (loading) {
     return (
-      <View style={styles.container}>
-        <Text>Chargement du Pokémon..</Text>
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#E3350D" />
+        <Text>Chargement du Pokémon...</Text>
       </View>
     );
   }
@@ -214,5 +215,10 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 5,
     marginTop: 20,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

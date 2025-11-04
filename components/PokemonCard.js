@@ -1,5 +1,6 @@
-import { TouchableOpacity, Image, Text, StyleSheet } from "react-native";
+import { TouchableOpacity, Image, Text, StyleSheet, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import { getGeneration } from "../constants/pokemonTypes";
 
 function capitalize(str) {
   return str.charAt(0).toUpperCase() + str.slice(1);
@@ -7,6 +8,8 @@ function capitalize(str) {
 
 export default function PokemonCard({ pokemon }) {
   const navigation = useNavigation();
+  const generation = getGeneration(pokemon.id);
+  
   return (
     <TouchableOpacity
       style={styles.card}
@@ -16,13 +19,14 @@ export default function PokemonCard({ pokemon }) {
         })
       }
     >
+      <View style={[styles.genBadge, { backgroundColor: generation.color }]}>
+        <Text style={styles.genText}>Gen {generation.id}</Text>
+      </View>
+      
       <Image
         style={styles.cardImage}
         source={{
-          uri:
-            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/" +
-            pokemon.id +
-            ".png",
+          uri: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemon.id}.png`,
         }}
       />
       <Text style={styles.cardNumber}>
@@ -42,6 +46,21 @@ const styles = StyleSheet.create({
     backgroundColor: "#f0f0f0",
     borderRadius: 10,
     padding: 10,
+    position: 'relative',
+  },
+  genBadge: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    zIndex: 1,
+  },
+  genText: {
+    color: 'white',
+    fontSize: 10,
+    fontWeight: 'bold',
   },
   cardImage: {
     width: 100,
@@ -49,9 +68,13 @@ const styles = StyleSheet.create({
   },
   cardNumber: {
     fontWeight: "bold",
-    marginRight: 6,
+    marginTop: 4,
+    color: '#666',
+    fontSize: 12,
   },
   cardText: {
-    marginTop: 10,
+    marginTop: 4,
+    fontWeight: '600',
+    fontSize: 14,
   },
 });

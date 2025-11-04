@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useTeam } from "../contexts/TeamContext";
-import { getTypeColor, translateType } from "../constants/pokemonTypes";
+import { getTypeColor, translateType, getGeneration } from "../constants/pokemonTypes";
 import { Ionicons } from '@expo/vector-icons';
 
 function capitalize(str) {
@@ -156,6 +156,12 @@ export default function PokemonDetail() {
         <View style={styles.headerInfo}>
           <Text style={styles.pokemonNumber}>#{pokemon.id.toString().padStart(3, '0')}</Text>
           <Text style={styles.title}>{capitalize(pokemon.name)}</Text>
+        </View>
+
+        <View style={[styles.genBadgeLarge, { backgroundColor: getGeneration(pokemon.id).color }]}>
+          <Text style={styles.genTextLarge}>
+            Génération {getGeneration(pokemon.id).id} • {getGeneration(pokemon.id).name}
+          </Text>
         </View>
 
         <View style={styles.typesContainer}>
@@ -468,5 +474,16 @@ const styles = StyleSheet.create({
   },
   bottomSpacer: {
     height: 100,
+  },
+  genBadgeLarge: {
+    marginTop: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  genTextLarge: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: 'bold',
   },
 });

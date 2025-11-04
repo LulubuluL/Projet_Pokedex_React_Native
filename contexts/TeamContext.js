@@ -1,5 +1,12 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import {
+  initDatabase,
+  getAllTeamPokemon,
+  addPokemonToTeam,
+  removePokemonFromTeam,
+  clearTeamTable,
+  getTeamCount,
+} from '../database/teamDatabase';
 
 const TeamContext = createContext();
 
@@ -8,45 +15,70 @@ export function TeamProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadTeam();
+    initializeAndLoadTeam();
   }, []);
 
-  async function loadTeam() {
+  async function initializeAndLoadTeam() {
     try {
-      const teamData = await AsyncStorage.getItem('pokemonTeam');
-      setTeam(teamData ? JSON.parse(teamData) : []);
+      await initDatabase();
+      await loadTeam();
     } catch (error) {
-      console.error('Error loading team:', error);
+      console.error('Error initializing database:', error);
     } finally {
       setLoading(false);
     }
   }
 
+  async function loadTeam() {
+    try {
+      const teamData = await getAllTeamPokemon();
+      setTeam(teamData);
+    } catch (error) {
+      console.error('Error loading team:', error);
+    }
+  }
+
   async function addPokemon(pokemon) {
-    if (team.length >= 6) {
-      return { success: false, error: 'TEAM_FULL' };
-    }
+    try {
+      const count = await getTeamCount();
+      
+      if (count >= 6) {
+        return { success: false, error: 'TEAM_FULL' };
+      }
 
-    if (team.some(p => p.id === pokemon.id)) {
-      return { success: false, error: 'ALREADY_IN_TEAM' };
-    }
+      if (team.some(p => p.id === pokemon.id)) {
+        return { success: false, error: 'ALREADY_IN_TEAM' };
+      }
 
-    const newTeam = [...team, pokemon];
-    await AsyncStorage.setItem('pokemonTeam', JSON.stringify(newTeam));
-    setTeam(newTeam);
-    return { success: true };
+      await addPokemonToTeam(pokemon);
+      await loadTeam();
+      return { success: true };
+    } catch (error) {
+      console.error('Error adding pokemon:', error);
+      return { success: false, error: 'DATABASE_ERROR' };
+    }
   }
 
   async function removePokemon(pokemonId) {
-    const newTeam = team.filter(p => p.id !== pokemonId);
-    await AsyncStorage.setItem('pokemonTeam', JSON.stringify(newTeam));
-    setTeam(newTeam);
-    return { success: true };
+    try {
+      await removePokemonFromTeam(pokemonId);
+      await loadTeam();
+      return { success: true };
+    } catch (error) {
+      console.error('Error removing pokemon:', error);
+      return { success: false, error: 'DATABASE_ERROR' };
+    }
   }
 
   async function clearTeam() {
-    await AsyncStorage.removeItem('pokemonTeam');
-    setTeam([]);
+    try {
+      await clearTeamTable();
+      setTeam([]);
+      return { success: true };
+    } catch (error) {
+      console.error('Error clearing team:', error);
+      return { success: false, error: 'DATABASE_ERROR' };
+    }
   }
 
   function isPokemonInTeam(pokemonId) {

@@ -20,7 +20,7 @@ export default function PokemonCard({ pokemon }) {
         style={styles.cardImage}
         source={{
           uri:
-            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/" +
+            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/" +
             pokemon.id +
             ".png",
         }}

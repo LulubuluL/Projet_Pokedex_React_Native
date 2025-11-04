@@ -30,9 +30,11 @@ export default function PokemonCard({ pokemon }) {
         })
       }
     >
-      <View style={[styles.genBadge, { backgroundColor: generation.color }]}>
-        <Text style={styles.genText}>Gen {generation.id}</Text>
-      </View>
+      {getGeneration(pokemon.id) && (
+        <View style={[styles.genBadge, { backgroundColor: getGeneration(pokemon.id).color }]}>
+          <Text style={styles.genText}>Gen {getGeneration(pokemon.id).id}</Text>
+        </View>
+      )}
       
       <TouchableOpacity 
         style={styles.favoriteButton}

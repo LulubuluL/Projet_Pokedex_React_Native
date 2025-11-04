@@ -379,11 +379,13 @@ export default function PokemonDetail() {
           </Text>
         </View>
 
-        <View style={[styles.genBadgeLarge, { backgroundColor: getGeneration(pokemon.id).color }]}>
-          <Text style={styles.genTextLarge}>
-            Génération {getGeneration(pokemon.id).id} • {getGeneration(pokemon.id).name}
-          </Text>
-        </View>
+        {getGeneration(pokemon.id) && (
+          <View style={[styles.genBadgeLarge, { backgroundColor: getGeneration(pokemon.id).color }]}>
+            <Text style={styles.genTextLarge}>
+              Génération {getGeneration(pokemon.id).id} • {getGeneration(pokemon.id).name}
+            </Text>
+          </View>
+        )}
 
         <View style={styles.typesContainer}>
           {pokemon.types.map((type) => (

@@ -56,5 +56,5 @@ export function getGeneration(pokemonId) {
   const gen = GENERATIONS.find(
     g => pokemonId >= g.range[0] && pokemonId <= g.range[1]
   );
-  return gen || GENERATIONS[0];
+  return gen || null;
 }

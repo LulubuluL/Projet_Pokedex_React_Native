@@ -1,51 +1,37 @@
-import { useState, useEffect } from "react";
 import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, View, Button, FlatList } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { StyleSheet, Text, View, TouchableOpacity, FlatList } from "react-native";
+import { useTeam } from "../contexts/TeamContext";
 import PokemonCardTeam from "../components/PokemonCardTeam";
 
 export default function PokemonTeam() {
-  const [pokemonList, setPokemonList] = useState([]);
-
-  async function getTeam() {
-    await AsyncStorage.getItem("pokemonTeam").then((team) => {
-      if (team !== null) {
-        setPokemonList(JSON.parse(team));
-      }
-    });
-  }
-
-  useEffect(() => {
-    const fetchTeam = async () => {
-      getTeam();
-    };
-
-    fetchTeam();
-
-    const interval = setInterval(fetchTeam, 2000);
-
-    return () => clearInterval(interval);
-  }, []);
+  const { team, clearTeam } = useTeam();
 
   return (
     <View style={styles.container}>
-      <View style={styles.title}>
-        <Text>Votre équipe</Text>
-        <Button
-          title="Clear team"
-          onPress={() =>
-            AsyncStorage.removeItem("pokemonTeam") && setPokemonList([])
-          }
-          color={"rgba(238,21,21,1)"}
-        />
+      <View style={styles.header}>
+        <Text style={styles.title}>Votre équipe ({team.length}/6)</Text>
+        {team.length > 0 && (
+          <TouchableOpacity
+            style={styles.clearButton}
+            onPress={clearTeam}
+          >
+            <Text style={styles.clearButtonText}>Vider</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
-      <FlatList
-        data={pokemonList}
-        renderItem={({ item }) => <PokemonCardTeam pokemon={item} />}
-        keyExtractor={(item) => item.id.toString()}
-        numColumns={2}
-      />
+      {team.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>Aucun Pokémon dans votre équipe</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={team}
+          renderItem={({ item }) => <PokemonCardTeam pokemon={item} />}
+          keyExtractor={(item) => item.id.toString()}
+          numColumns={2}
+        />
+      )}
 
       <StatusBar style="auto" />
     </View>
@@ -57,10 +43,35 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#fff",
   },
-  title: {
+  header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: 10,
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#e0e0e0",
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  clearButton: {
+    backgroundColor: "rgba(238,21,21,1)",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 5,
+  },
+  clearButtonText: {
+    color: "white",
+    fontWeight: "bold",
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  emptyText: {
+    fontSize: 16,
+    color: "#757575",
   },
 });

@@ -25,6 +25,9 @@ export default function PokemonCard({ pokemon }) {
             ".png",
         }}
       />
+      <Text style={styles.cardNumber}>
+        #{pokemon.id.toString().padStart(3, "0")}
+      </Text>
       <Text style={styles.cardText}>{capitalize(pokemon.name)}</Text>
     </TouchableOpacity>
   );
@@ -43,6 +46,10 @@ const styles = StyleSheet.create({
   cardImage: {
     width: 100,
     height: 100,
+  },
+  cardNumber: {
+    fontWeight: "bold",
+    marginRight: 6,
   },
   cardText: {
     marginTop: 10,

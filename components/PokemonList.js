@@ -1,10 +1,19 @@
 import { useState, useEffect } from "react";
 import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, View, FlatList } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  FlatList,
+  TextInput,
+  ActivityIndicator,
+} from "react-native";
 import PokemonCard from "./PokemonCard";
 
 export default function PokemonList() {
   const [pokemonList, setPokemonList] = useState([]);
+  const [filteredList, setFilteredList] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -34,6 +43,7 @@ export default function PokemonList() {
         );
 
         setPokemonList(detailedList);
+        setFilteredList(detailedList);
         setLoading(false);
       })
       .catch((error) => {
@@ -43,18 +53,46 @@ export default function PokemonList() {
       });
   }, []);
 
+  const handleSearch = (text) => {
+    setSearchQuery(text);
+
+    const filtered = pokemonList.filter((pokemon) => {
+      const query = text.toLowerCase();
+
+      if (!isNaN(query) && query.trim() !== "") {
+        return pokemon.id.toString().padStart(3, "0").includes(query);
+      }
+
+      return pokemon.name.toLowerCase().includes(query);
+    });
+
+    setFilteredList(filtered);
+  };
+
   if (loading) {
-    return <Text>Loading...</Text>;
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#E3350D" />
+        <Text>Chargement des Pokémon...</Text>
+      </View>
+    );
   }
 
   if (error) {
-    return <Text>Error: {error.message}</Text>;
+    return <Text>Erreur : {error.message}</Text>;
   }
 
   return (
     <View style={styles.container}>
+      <TextInput
+        style={styles.searchBar}
+        placeholder="Rechercher un Pokémon..."
+        value={searchQuery}
+        onChangeText={handleSearch}
+      />
+
       <FlatList
-        data={pokemonList}
+        data={filteredList}
         renderItem={({ item }) => <PokemonCard pokemon={item} />}
         keyExtractor={(item) => item.id.toString()}
         numColumns={2}
@@ -68,22 +106,19 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
-    paddingTop: 20,
+    paddingTop: 40,
+    paddingHorizontal: 10,
   },
-  card: {
-    flex: 1,
-    margin: 10,
-    alignItems: "center",
-    justifyContent: "center",
+  searchBar: {
     backgroundColor: "#f0f0f0",
-    borderRadius: 10,
     padding: 10,
+    borderRadius: 10,
+    marginBottom: 15,
+    fontSize: 16,
   },
-  cardImage: {
-    width: 100,
-    height: 100,
-  },
-  cardText: {
-    marginTop: 10,
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

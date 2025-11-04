@@ -94,7 +94,7 @@ export default function PokemonDetail() {
   if (loading) {
     return (
       <View style={styles.container}>
-        <Text>Loading...</Text>
+        <Text>Chargement du Pokémon..</Text>
       </View>
     );
   }

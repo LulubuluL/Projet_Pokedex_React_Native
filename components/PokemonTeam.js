@@ -15,7 +15,7 @@ export default function PokemonTeam() {
             style={styles.clearButton}
             onPress={clearTeam}
           >
-            <Text style={styles.clearButtonText}>Vider</Text>
+            <Text style={styles.clearButtonText}>Vider l'équipe</Text>
           </TouchableOpacity>
         )}
       </View>

@@ -3,7 +3,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import HomeScreen from "./screens/HomeScreen";
 import TeamScreen from "./screens/TeamScreen";
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from "@expo/vector-icons";
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as ScreenOrientation from "expo-screen-orientation";
@@ -43,7 +43,7 @@ export default function App() {
 
             if (route.name === "Pokedex") {
               iconName = focused ? "list" : "list-outline";
-            } else if (route.name === "Team") {
+            } else if (route.name === "Mon équipe") {
               iconName = focused ? "people" : "people-outline";
             }
 
@@ -67,7 +67,7 @@ export default function App() {
         })}
       >
         <Tab.Screen name="Pokedex" component={HomeScreen} />
-        <Tab.Screen name="Team" component={TeamScreen} />
+        <Tab.Screen name="Mon équipe" component={TeamScreen} />
       </Tab.Navigator>
     </NavigationContainer>
   );

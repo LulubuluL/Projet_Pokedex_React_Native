@@ -127,7 +127,7 @@ export default function PokemonDetail() {
   }, []);
 
   if (loading) {
-    return <Text>Loading...</Text>;
+    return <Text>Chargement du Pokémon...</Text>;
   }
 
   if (error) {

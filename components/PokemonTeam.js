@@ -32,7 +32,7 @@ export default function PokemonTeam() {
       <View style={styles.title}>
         <Text>Votre équipe</Text>
         <Button
-          title="Clear team"
+          title="Vider l'équipe"
           onPress={() =>
             AsyncStorage.removeItem("pokemonTeam") && setPokemonList([])
           }

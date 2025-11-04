@@ -8,10 +8,12 @@ import {
   Image,
   ScrollView,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useTeam } from "../contexts/TeamContext";
 import { getTypeColor, translateType } from "../constants/pokemonTypes";
+import { Ionicons } from '@expo/vector-icons';
 
 function capitalize(str) {
   return str.charAt(0).toUpperCase() + str.slice(1);
@@ -41,7 +43,6 @@ export default function PokemonDetail() {
       const speciesResp = await fetch(data.species.url);
       const speciesData = await speciesResp.json();
 
-      // Nom et description FR
       const frenchName =
         speciesData.names.find((n) => n.language.name === "fr")?.name ||
         data.name;
@@ -50,7 +51,6 @@ export default function PokemonDetail() {
           .find((t) => t.language.name === "fr")
           ?.flavor_text.replace(/\n|\f/g, " ") || "";
 
-      // Évolutions
       const evolResp = await fetch(speciesData.evolution_chain.url);
       const evolData = await evolResp.json();
       const evoChain = [];
@@ -67,7 +67,6 @@ export default function PokemonDetail() {
         evo = evo.evolves_to[0];
       }
 
-      // Types + faiblesses
       const typeUrls = data.types.map((t) => t.type.url);
       const typeData = await Promise.all(
         typeUrls.map((url) => fetch(url).then((r) => r.json()))
@@ -79,7 +78,6 @@ export default function PokemonDetail() {
         )
       );
 
-      // Traduction des stats
       const statTranslations = {
         hp: "PV",
         attack: "Attaque",
@@ -99,6 +97,7 @@ export default function PokemonDetail() {
           name: statTranslations[s.stat.name] || s.stat.name,
           value: s.base_stat,
         })),
+        speciesUrl: data.species.url,
       });
       setDescription(frenchDesc);
       setEvolutions(evoChain);
@@ -110,26 +109,41 @@ export default function PokemonDetail() {
     }
   }
 
+  async function handleAddToTeam() {
+    const result = await addPokemon(pokemon);
+    
+    if (!result.success) {
+      if (result.error === 'TEAM_FULL') {
+        Alert.alert('Équipe complète', 'Vous avez déjà 6 Pokémon dans votre équipe !');
+      } else if (result.error === 'ALREADY_IN_TEAM') {
+        Alert.alert('Déjà dans l\'équipe', 'Ce Pokémon est déjà dans votre équipe !');
+      }
+    }
+  }
+
+  async function handleRemoveFromTeam() {
+    await removePokemon(pokemon.id);
+  }
+
   const isInTeam = pokemon && isPokemonInTeam(pokemon.id);
 
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#E3350D" />
-        <Text>Chargement du Pokémon...</Text>
+        <ActivityIndicator size="large" color="rgba(238,21,21,1)" />
+        <Text style={styles.loadingText}>Chargement du Pokémon...</Text>
       </View>
     );
   }
 
   return (
-    <ScrollView style={styles.scroll}>
+    <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
       <View style={styles.container}>
-        {/* Bouton retour en haut */}
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <Text style={styles.backText}>⬅ Retour</Text>
+          <Ionicons name="arrow-back" size={24} color="#333" />
         </TouchableOpacity>
 
         <Image
@@ -139,60 +153,105 @@ export default function PokemonDetail() {
           }}
         />
 
-        <Text style={styles.title}>
-          #{pokemon.id} {capitalize(pokemon.name)}
-        </Text>
+        <View style={styles.headerInfo}>
+          <Text style={styles.pokemonNumber}>#{pokemon.id.toString().padStart(3, '0')}</Text>
+          <Text style={styles.title}>{capitalize(pokemon.name)}</Text>
+        </View>
 
-        <View style={styles.types}>
+        <View style={styles.typesContainer}>
           {pokemon.types.map((type) => (
-            <Text
+            <View
               key={type}
               style={[styles.typeTag, { backgroundColor: getTypeColor(type) }]}
             >
-              {capitalize(translateType(type))}
-            </Text>
+              <Text style={styles.typeText}>
+                {translateType(type)}
+              </Text>
+            </View>
           ))}
         </View>
 
-        <Text style={styles.description}>{description}</Text>
+        {description && (
+          <View style={styles.card}>
+            <Text style={styles.description}>{description}</Text>
+          </View>
+        )}
 
-        <View style={styles.statsContainer}>
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Informations</Text>
+          <View style={styles.infoRow}>
+            <View style={styles.infoItem}>
+              <Text style={styles.infoLabel}>Taille</Text>
+              <Text style={styles.infoValue}>{pokemon.height} m</Text>
+            </View>
+            <View style={styles.infoDivider} />
+            <View style={styles.infoItem}>
+              <Text style={styles.infoLabel}>Poids</Text>
+              <Text style={styles.infoValue}>{pokemon.weight} kg</Text>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.card}>
           <Text style={styles.sectionTitle}>Statistiques</Text>
           {pokemon.stats.map((s) => (
             <View key={s.name} style={styles.statRow}>
               <Text style={styles.statName}>{s.name}</Text>
+              <View style={styles.statBarContainer}>
+                <View 
+                  style={[
+                    styles.statBar, 
+                    { 
+                      width: `${(s.value / 255) * 100}%`,
+                      backgroundColor: s.value > 100 ? '#4CAF50' : s.value > 60 ? '#FFC107' : '#FF5722'
+                    }
+                  ]} 
+                />
+              </View>
               <Text style={styles.statValue}>{s.value}</Text>
             </View>
           ))}
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Faiblesses</Text>
-          <View style={styles.types}>
-            {weaknesses.map((w) => (
-              <Text
-                key={w}
-                style={[styles.typeTag, { backgroundColor: getTypeColor(w) }]}
-              >
-                {capitalize(translateType(w))}
-              </Text>
-            ))}
+        {weaknesses.length > 0 && (
+          <View style={styles.card}>
+            <Text style={styles.sectionTitle}>Faiblesses</Text>
+            <View style={styles.typesContainer}>
+              {weaknesses.map((w) => (
+                <View
+                  key={w}
+                  style={[styles.typeTagSmall, { backgroundColor: getTypeColor(w) }]}
+                >
+                  <Text style={styles.typeTextSmall}>
+                    {translateType(w)}
+                  </Text>
+                </View>
+              ))}
+            </View>
           </View>
-        </View>
+        )}
 
         {evolutions.length > 1 && (
-          <View style={styles.section}>
+          <View style={styles.card}>
             <Text style={styles.sectionTitle}>Évolutions</Text>
             <View style={styles.evoContainer}>
-              {evolutions.map((e) => (
-                <View key={e.id} style={styles.evoItem}>
-                  <Image
-                    style={styles.evoImg}
-                    source={{
-                      uri: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${e.id}.png`,
-                    }}
-                  />
-                  <Text>{capitalize(e.name)}</Text>
+              {evolutions.map((e, index) => (
+                <View key={e.id} style={styles.evoWrapper}>
+                  <TouchableOpacity
+                    style={styles.evoItem}
+                    onPress={() => navigation.push('PokemonDetail', { id: e.id })}
+                  >
+                    <Image
+                      style={styles.evoImg}
+                      source={{
+                        uri: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${e.id}.png`,
+                      }}
+                    />
+                    <Text style={styles.evoName}>{capitalize(e.name)}</Text>
+                  </TouchableOpacity>
+                  {index < evolutions.length - 1 && (
+                    <Ionicons name="arrow-forward" size={20} color="#999" style={styles.evoArrow} />
+                  )}
                 </View>
               ))}
             </View>
@@ -200,16 +259,15 @@ export default function PokemonDetail() {
         )}
 
         <TouchableOpacity
-          style={[styles.button, isInTeam ? styles.remove : styles.add]}
-          onPress={() =>
-            isInTeam ? removePokemon(pokemon.id) : addPokemon(pokemon)
-          }
+          style={[styles.button, isInTeam ? styles.buttonRemove : styles.buttonAdd]}
+          onPress={isInTeam ? handleRemoveFromTeam : handleAddToTeam}
         >
           <Text style={styles.buttonText}>
             {isInTeam ? "Retirer de l'équipe" : "Ajouter à l'équipe"}
           </Text>
         </TouchableOpacity>
 
+        <View style={styles.bottomSpacer} />
         <StatusBar style="auto" />
       </View>
     </ScrollView>
@@ -217,60 +275,198 @@ export default function PokemonDetail() {
 }
 
 const styles = StyleSheet.create({
-  scroll: { flex: 1, backgroundColor: "#fff" },
-  container: { alignItems: "center", padding: 10 },
+  scroll: {
+    flex: 1,
+    backgroundColor: "#fff",
+  },
+  container: {
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingTop: 10,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#fff",
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: "#666",
+  },
   backButton: {
     alignSelf: "flex-start",
-    marginLeft: 10,
-    marginTop: 5,
-    marginBottom: 5,
+    padding: 8,
+    marginBottom: 8,
   },
-  backText: { fontSize: 16, color: "#333" },
-  image: { width: 90, height: 90, marginVertical: 5 },
-  title: { fontSize: 26, fontWeight: "bold", marginVertical: 6 },
-  types: { flexDirection: "row", justifyContent: "center", flexWrap: "wrap" },
-  typeTag: {
-    color: "white",
+  image: {
+    width: 180,
+    height: 180,
+    marginVertical: 10,
+  },
+  headerInfo: {
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  pokemonNumber: {
+    fontSize: 16,
+    color: "#999",
+    fontWeight: "600",
+  },
+  title: {
+    fontSize: 32,
     fontWeight: "bold",
-    margin: 4,
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    borderRadius: 5,
+    color: "#333",
+    marginTop: 4,
   },
-  description: {
-    fontStyle: "italic",
-    textAlign: "center",
-    marginVertical: 6,
-    paddingHorizontal: 10,
-  },
-  statsContainer: { width: "90%", marginVertical: 6 },
-  statRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: 3,
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
-  },
-  statName: { fontWeight: "bold", textTransform: "capitalize" },
-  statValue: { color: "#333" },
-  section: { marginTop: 10, alignItems: "center" },
-  sectionTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 6 },
-  evoContainer: {
+  typesContainer: {
     flexDirection: "row",
     justifyContent: "center",
     flexWrap: "wrap",
+    marginBottom: 16,
   },
-  evoItem: { alignItems: "center", marginHorizontal: 10 },
-  evoImg: { width: 70, height: 70 },
-  button: {
-    padding: 10,
-    borderRadius: 8,
-    marginTop: 15,
-    width: "80%",
+  typeTag: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    margin: 4,
+  },
+  typeText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 14,
+  },
+  typeTagSmall: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+    margin: 4,
+  },
+  typeTextSmall: {
+    color: "white",
+    fontWeight: "600",
+    fontSize: 12,
+  },
+  card: {
+    width: "100%",
+    backgroundColor: "#f8f8f8",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+  },
+  description: {
+    fontSize: 15,
+    lineHeight: 22,
+    color: "#555",
+    textAlign: "center",
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 12,
+  },
+  infoRow: {
+    flexDirection: "row",
+    justifyContent: "space-around",
     alignItems: "center",
   },
-  add: { backgroundColor: "#E3350D" },
-  remove: { backgroundColor: "#757575" },
-  buttonText: { color: "#fff", fontWeight: "bold" },
-  loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
+  infoItem: {
+    flex: 1,
+    alignItems: "center",
+  },
+  infoDivider: {
+    width: 1,
+    height: 40,
+    backgroundColor: "#ddd",
+  },
+  infoLabel: {
+    fontSize: 14,
+    color: "#999",
+    marginBottom: 4,
+  },
+  infoValue: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#333",
+  },
+  statRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  statName: {
+    width: 80,
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#555",
+  },
+  statBarContainer: {
+    flex: 1,
+    height: 8,
+    backgroundColor: "#e0e0e0",
+    borderRadius: 4,
+    marginHorizontal: 10,
+    overflow: "hidden",
+  },
+  statBar: {
+    height: "100%",
+    borderRadius: 4,
+  },
+  statValue: {
+    width: 40,
+    textAlign: "right",
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#333",
+  },
+  evoContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    flexWrap: "wrap",
+  },
+  evoWrapper: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  evoItem: {
+    alignItems: "center",
+    padding: 8,
+  },
+  evoImg: {
+    width: 80,
+    height: 80,
+  },
+  evoName: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#333",
+    marginTop: 4,
+  },
+  evoArrow: {
+    marginHorizontal: 8,
+  },
+  button: {
+    width: "100%",
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: "center",
+    marginTop: 8,
+  },
+  buttonAdd: {
+    backgroundColor: "rgba(238,21,21,1)",
+  },
+  buttonRemove: {
+    backgroundColor: "#757575",
+  },
+  buttonText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 16,
+  },
+  bottomSpacer: {
+    height: 100,
+  },
 });

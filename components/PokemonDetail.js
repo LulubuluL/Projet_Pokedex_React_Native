@@ -15,6 +15,7 @@ import { useTeam } from "../contexts/TeamContext";
 import { getTypeColor, translateType, getGeneration } from "../constants/pokemonTypes";
 import { Ionicons } from '@expo/vector-icons';
 import { useFavorites } from "../contexts/FavoritesContext";
+import { playPokemonCry } from '../services/pokemonSound';
 
 function capitalize(str) {
   return str.charAt(0).toUpperCase() + str.slice(1);
@@ -31,6 +32,7 @@ export default function PokemonDetail() {
   const [evolutions, setEvolutions] = useState([]);
   const [weaknesses, setWeaknesses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [playingSound, setPlayingSound] = useState(false);
 
   useEffect(() => {
     fetchPokemonDetails();
@@ -126,6 +128,12 @@ export default function PokemonDetail() {
     await removePokemon(pokemon.id);
   }
 
+  async function handlePlayCry() {
+    setPlayingSound(true);
+    await playPokemonCry(pokemon.id);
+    setTimeout(() => setPlayingSound(false), 1000);
+  }
+
   const isInTeam = pokemon && isPokemonInTeam(pokemon.id);
 
   const { isFavorite, toggleFavorite } = useFavorites();
@@ -170,6 +178,21 @@ export default function PokemonDetail() {
             uri: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`,
           }}
         />
+
+        <TouchableOpacity
+          style={styles.soundButton}
+          onPress={handlePlayCry}
+          disabled={playingSound}
+        >
+          <Ionicons 
+            name={playingSound ? "volume-high" : "volume-medium-outline"} 
+            size={24} 
+            color={playingSound ? "rgba(238,21,21,1)" : "#666"} 
+          />
+          <Text style={styles.soundButtonText}>
+            {playingSound ? "Lecture..." : "Écouter le cri"}
+          </Text>
+        </TouchableOpacity>
 
         <View style={styles.headerInfo}>
           <Text style={styles.pokemonNumber}>#{pokemon.id.toString().padStart(3, '0')}</Text>
@@ -513,5 +536,21 @@ const styles = StyleSheet.create({
   },
   favoriteButtonDetail: {
     padding: 8,
+  },
+  soundButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f0f0f0',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+    marginTop: 10,
+    marginBottom: 10,
+  },
+  soundButtonText: {
+    marginLeft: 8,
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#666',
   },
 });

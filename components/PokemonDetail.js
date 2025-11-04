@@ -244,7 +244,7 @@ export default function PokemonDetail() {
                     <Image
                       style={styles.evoImg}
                       source={{
-                        uri: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`,
+                        uri: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${e.id}.png`,
                       }}
                     />
                     <Text style={styles.evoName}>{capitalize(e.name)}</Text>

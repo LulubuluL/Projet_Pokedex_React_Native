@@ -7,6 +7,7 @@ import {
   Image,
   ActivityIndicator,
   ScrollView,
+  TextInput,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
@@ -21,11 +22,20 @@ function capitalize(str) {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
+function normalizeString(str) {
+  return str
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim();
+}
+
 export default function QuizScreen() {
   const { theme, isDark } = useTheme();
   const [pokemonList, setPokemonList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [gameState, setGameState] = useState('menu');
+  const [difficulty, setDifficulty] = useState(null);
   const [currentQuestion, setCurrentQuestion] = useState(null);
   const [score, setScore] = useState(0);
   const [questionNumber, setQuestionNumber] = useState(0);
@@ -34,6 +44,7 @@ export default function QuizScreen() {
   const [stats, setStats] = useState(null);
   const [streak, setStreak] = useState(0);
   const [bestStreak, setBestStreak] = useState(0);
+  const [textAnswer, setTextAnswer] = useState('');
 
   useEffect(() => {
     loadData();
@@ -54,7 +65,8 @@ export default function QuizScreen() {
     }
   }
 
-  function startGame() {
+  function startGame(selectedDifficulty) {
+    setDifficulty(selectedDifficulty);
     setGameState('playing');
     setScore(0);
     setQuestionNumber(0);
@@ -67,6 +79,7 @@ export default function QuizScreen() {
     const question = generateQuizQuestion(pokemonList);
     setCurrentQuestion(question);
     setSelectedAnswer(null);
+    setTextAnswer('');
     setShowResult(false);
     setQuestionNumber(prev => prev + 1);
   }
@@ -97,9 +110,38 @@ export default function QuizScreen() {
     }, 1500);
   }
 
+  function handleTextAnswer() {
+    const normalizedInput = normalizeString(textAnswer);
+    const normalizedCorrect = normalizeString(currentQuestion.correctPokemon.name);
+    
+    const isCorrect = normalizedInput === normalizedCorrect;
+    
+    setShowResult(true);
+    
+    if (isCorrect) {
+      setScore(prev => prev + 15);
+      setStreak(prev => {
+        const newStreak = prev + 1;
+        setBestStreak(current => Math.max(current, newStreak));
+        return newStreak;
+      });
+    } else {
+      setStreak(0);
+    }
+
+    setTimeout(() => {
+      if (questionNumber >= 10) {
+        endGame(isCorrect);
+      } else {
+        nextQuestion();
+      }
+    }, 2000);
+  }
+
   async function endGame(lastCorrect) {
-    const finalScore = lastCorrect ? score + 10 : score;
-    const correct = Math.round(finalScore / 10);
+    const pointsPerQuestion = difficulty === 'hard' ? 15 : 10;
+    const finalScore = lastCorrect ? score + pointsPerQuestion : score;
+    const correct = Math.round(finalScore / pointsPerQuestion);
     
     const newStats = await updateQuizStats(finalScore, correct, 10, bestStreak);
     setStats(newStats);
@@ -108,6 +150,7 @@ export default function QuizScreen() {
 
   function quitGame() {
     setGameState('menu');
+    setDifficulty(null);
   }
 
   if (loading) {
@@ -127,15 +170,34 @@ export default function QuizScreen() {
             Qui est ce Pokémon ?
           </Text>
           <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
-            Devine le Pokémon à partir de sa silhouette !
+            Choisissez votre niveau de difficulté
           </Text>
 
-          <TouchableOpacity
-            style={[styles.startButton, { backgroundColor: theme.primary }]}
-            onPress={startGame}
-          >
-            <Text style={styles.startButtonText}>Commencer le Quiz</Text>
-          </TouchableOpacity>
+          <View style={styles.difficultyContainer}>
+            <TouchableOpacity
+              style={[styles.difficultyButton, { backgroundColor: '#4CAF50', borderColor: '#4CAF50' }]}
+              onPress={() => startGame('easy')}
+            >
+              <Ionicons name="happy-outline" size={32} color="white" />
+              <Text style={styles.difficultyTitle}>Facile</Text>
+              <Text style={styles.difficultyDescription}>
+                4 choix de réponse
+              </Text>
+              <Text style={styles.difficultyPoints}>10 points/bonne réponse</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.difficultyButton, { backgroundColor: '#FF5722', borderColor: '#FF5722' }]}
+              onPress={() => startGame('hard')}
+            >
+              <Ionicons name="flame-outline" size={32} color="white" />
+              <Text style={styles.difficultyTitle}>Difficile</Text>
+              <Text style={styles.difficultyDescription}>
+                Écrire le nom exact
+              </Text>
+              <Text style={styles.difficultyPoints}>15 points/bonne réponse</Text>
+            </TouchableOpacity>
+          </View>
 
           {stats && (
             <View style={[styles.statsCard, { backgroundColor: theme.backgroundSecondary }]}>
@@ -185,7 +247,9 @@ export default function QuizScreen() {
   }
 
   if (gameState === 'results') {
-    const correct = Math.round(score / 10);
+    const pointsPerQuestion = difficulty === 'hard' ? 15 : 10;
+    const maxScore = pointsPerQuestion * 10;
+    const correct = Math.round(score / pointsPerQuestion);
     const percentage = Math.round((correct / 10) * 100);
 
     return (
@@ -200,12 +264,20 @@ export default function QuizScreen() {
             Quiz terminé !
           </Text>
           
+          <View style={[styles.difficultyBadge, { 
+            backgroundColor: difficulty === 'hard' ? '#FF5722' : '#4CAF50' 
+          }]}>
+            <Text style={styles.difficultyBadgeText}>
+              Mode {difficulty === 'hard' ? 'Difficile' : 'Facile'}
+            </Text>
+          </View>
+
           <View style={[styles.scoreCard, { backgroundColor: theme.backgroundSecondary }]}>
             <Text style={[styles.scoreLabel, { color: theme.textSecondary }]}>
               Score final
             </Text>
             <Text style={[styles.scoreValue, { color: theme.primary }]}>
-              {score} / 100
+              {score} / {maxScore}
             </Text>
             <Text style={[styles.correctText, { color: theme.textSecondary }]}>
               {correct} bonnes réponses sur 10
@@ -221,9 +293,9 @@ export default function QuizScreen() {
 
           <TouchableOpacity
             style={[styles.button, { backgroundColor: theme.primary }]}
-            onPress={startGame}
+            onPress={quitGame}
           >
-            <Text style={styles.buttonText}>Rejouer</Text>
+            <Text style={styles.buttonText}>Nouvelle partie</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -243,7 +315,9 @@ export default function QuizScreen() {
     return null;
   }
 
-  const isCorrect = selectedAnswer?.id === currentQuestion.correctPokemon.id;
+  const isCorrect = difficulty === 'easy'
+    ? selectedAnswer?.id === currentQuestion.correctPokemon.id
+    : normalizeString(textAnswer) === normalizeString(currentQuestion.correctPokemon.name);
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
@@ -275,7 +349,7 @@ export default function QuizScreen() {
         </View>
       </View>
 
-      <View style={styles.gameContainer}>
+      <ScrollView style={styles.gameContainer}>
         <Text style={[styles.question, { color: theme.text }]}>
           Qui est ce Pokémon ?
         </Text>
@@ -283,13 +357,13 @@ export default function QuizScreen() {
         <View style={styles.imageContainer}>
           <Image
             source={{
-                uri: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${currentQuestion.correctPokemon.id}.png`,
+              uri: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${currentQuestion.correctPokemon.id}.png`,
             }}
             style={[
-                styles.pokemonImage,
-                !showResult && { tintColor: isDark ? 'white' : 'black' },
+              styles.pokemonImage,
+              !showResult && { tintColor: isDark ? 'white' : 'black' },
             ]}
-            />
+          />
         </View>
 
         {showResult && (
@@ -316,44 +390,80 @@ export default function QuizScreen() {
           </View>
         )}
 
-        <View style={styles.choicesContainer}>
-          {currentQuestion.choices.map((pokemon) => {
-            const isSelected = selectedAnswer?.id === pokemon.id;
-            const isThisCorrect = pokemon.id === currentQuestion.correctPokemon.id;
+        {difficulty === 'easy' ? (
+          <View style={styles.choicesContainer}>
+            {currentQuestion.choices.map((pokemon) => {
+              const isSelected = selectedAnswer?.id === pokemon.id;
+              const isThisCorrect = pokemon.id === currentQuestion.correctPokemon.id;
 
-            let buttonStyle = [
-              styles.choiceButton,
-              { backgroundColor: theme.card, borderColor: theme.border },
-            ];
+              let buttonStyle = [
+                styles.choiceButton,
+                { backgroundColor: theme.card, borderColor: theme.border },
+              ];
 
-            if (showResult) {
-              if (isThisCorrect) {
-                buttonStyle.push(styles.correctChoice);
-              } else if (isSelected) {
-                buttonStyle.push(styles.wrongChoice);
+              if (showResult) {
+                if (isThisCorrect) {
+                  buttonStyle.push(styles.correctChoice);
+                } else if (isSelected) {
+                  buttonStyle.push(styles.wrongChoice);
+                }
               }
-            }
 
-            return (
-              <TouchableOpacity
-                key={pokemon.id}
-                style={buttonStyle}
-                onPress={() => !showResult && handleAnswer(pokemon)}
-                disabled={showResult}
-              >
-                <Text style={[styles.choiceText, { color: theme.text }]}>
-                  {capitalize(pokemon.name)}
-                </Text>
-                {showResult && isThisCorrect && (
-                  <Ionicons name="checkmark" size={20} color="#4CAF50" />
-                )}
-                {showResult && isSelected && !isThisCorrect && (
-                  <Ionicons name="close" size={20} color="#F44336" />
-                )}
-              </TouchableOpacity>
-            );
-          })}
-        </View>
+              return (
+                <TouchableOpacity
+                  key={pokemon.id}
+                  style={buttonStyle}
+                  onPress={() => !showResult && handleAnswer(pokemon)}
+                  disabled={showResult}
+                >
+                  <Text style={[styles.choiceText, { color: theme.text }]}>
+                    {capitalize(pokemon.name)}
+                  </Text>
+                  {showResult && isThisCorrect && (
+                    <Ionicons name="checkmark" size={20} color="#4CAF50" />
+                  )}
+                  {showResult && isSelected && !isThisCorrect && (
+                    <Ionicons name="close" size={20} color="#F44336" />
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        ) : (
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={[
+                styles.textInput,
+                { 
+                  backgroundColor: theme.card, 
+                  color: theme.text,
+                  borderColor: showResult 
+                    ? (isCorrect ? '#4CAF50' : '#F44336')
+                    : theme.border
+                },
+              ]}
+              placeholder="Entrez le nom du Pokémon..."
+              placeholderTextColor={theme.textTertiary}
+              value={textAnswer}
+              onChangeText={setTextAnswer}
+              onSubmitEditing={handleTextAnswer}
+              editable={!showResult}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+            <TouchableOpacity
+              style={[
+                styles.submitButton,
+                { backgroundColor: theme.primary },
+                (!textAnswer.trim() || showResult) && styles.submitButtonDisabled
+              ]}
+              onPress={handleTextAnswer}
+              disabled={!textAnswer.trim() || showResult}
+            >
+              <Text style={styles.submitButtonText}>Valider</Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
         <TouchableOpacity
           style={[styles.quitButton, { borderColor: theme.border }]}
@@ -363,7 +473,7 @@ export default function QuizScreen() {
             Abandonner
           </Text>
         </TouchableOpacity>
-      </View>
+      </ScrollView>
     </View>
   );
 }
@@ -389,18 +499,35 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginTop: 10,
     textAlign: 'center',
-    marginBottom: 40,
-  },
-  startButton: {
-    paddingVertical: 16,
-    paddingHorizontal: 40,
-    borderRadius: 30,
     marginBottom: 30,
   },
-  startButtonText: {
+  difficultyContainer: {
+    width: '100%',
+    gap: 16,
+    marginBottom: 30,
+  },
+  difficultyButton: {
+    padding: 24,
+    borderRadius: 16,
+    alignItems: 'center',
+    borderWidth: 3,
+  },
+  difficultyTitle: {
     color: 'white',
-    fontSize: 18,
+    fontSize: 24,
     fontWeight: 'bold',
+    marginTop: 12,
+  },
+  difficultyDescription: {
+    color: 'rgba(255,255,255,0.9)',
+    fontSize: 14,
+    marginTop: 8,
+  },
+  difficultyPoints: {
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: 12,
+    marginTop: 4,
+    fontWeight: '600',
   },
   statsCard: {
     width: '100%',
@@ -516,6 +643,29 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
   },
+  inputContainer: {
+    gap: 12,
+  },
+  textInput: {
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 2,
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  submitButton: {
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  submitButtonDisabled: {
+    opacity: 0.5,
+  },
+  submitButtonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
   quitButton: {
     marginTop: 20,
     padding: 12,
@@ -536,7 +686,18 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: 'bold',
     marginTop: 20,
-    marginBottom: 30,
+    marginBottom: 20,
+  },
+  difficultyBadge: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginBottom: 20,
+  },
+  difficultyBadgeText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: 'bold',
   },
   scoreCard: {
     width: '100%',

@@ -7,30 +7,13 @@ import {
   TouchableOpacity,
   Image,
   Alert,
-  ActivityIndicator
 } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useTeam } from "../contexts/TeamContext";
-
-const POKEMON_TYPES = [
-  "normal", "fighting", "flying", "poison", "ground", "rock",
-  "bug", "ghost", "steel", "fire", "water", "grass",
-  "electric", "psychic", "ice", "dragon", "dark", "fairy",
-];
-
-const POKEMON_COLORS = [
-  "#A8A878", "#C03028", "#A890F0", "#A040A0", "#E0C068", "#B8A038",
-  "#A8B820", "#705898", "#B8B8D0", "#F08030", "#6890F0", "#78C850",
-  "#F8D030", "#F85888", "#98D8D8", "#7038F8", "#705848", "#EE99AC",
-];
+import { getTypeColor, translateType } from "../constants/pokemonTypes";
 
 function capitalize(str) {
   return str.charAt(0).toUpperCase() + str.slice(1);
-}
-
-function getTypeColor(type) {
-  const index = POKEMON_TYPES.indexOf(type);
-  return index !== -1 ? POKEMON_COLORS[index] : "#A8A878";
 }
 
 export default function PokemonDetail() {
@@ -94,9 +77,8 @@ export default function PokemonDetail() {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#E3350D" />
-        <Text>Chargement du Pokémon...</Text>
+      <View style={styles.container}>
+        <Text>Loading...</Text>
       </View>
     );
   }
@@ -138,7 +120,7 @@ export default function PokemonDetail() {
             ]}
           >
             <Text style={styles.typeText}>
-              {capitalize(type.type.name)}
+              {translateType(type.type.name)}
             </Text>
           </View>
         ))}
@@ -216,10 +198,5 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 5,
     marginTop: 20,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
   },
 });

@@ -14,6 +14,7 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import { useTeam } from "../contexts/TeamContext";
 import { getTypeColor, translateType, getGeneration } from "../constants/pokemonTypes";
 import { Ionicons } from '@expo/vector-icons';
+import { useFavorites } from "../contexts/FavoritesContext";
 
 function capitalize(str) {
   return str.charAt(0).toUpperCase() + str.slice(1);
@@ -127,6 +128,9 @@ export default function PokemonDetail() {
 
   const isInTeam = pokemon && isPokemonInTeam(pokemon.id);
 
+  const { isFavorite, toggleFavorite } = useFavorites();
+  const favorite = isFavorite(pokemon?.id);
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -139,12 +143,26 @@ export default function PokemonDetail() {
   return (
     <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
       <View style={styles.container}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Ionicons name="arrow-back" size={24} color="#333" />
-        </TouchableOpacity>
+
+        <View style={styles.topButtons}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Ionicons name="arrow-back" size={24} color="#333" />
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={styles.favoriteButtonDetail}
+            onPress={() => toggleFavorite(pokemon.id)}
+          >
+            <Ionicons 
+              name={favorite ? "star" : "star-outline"} 
+              size={28} 
+              color={favorite ? "#FFD700" : "#999"} 
+            />
+          </TouchableOpacity>
+        </View>
 
         <Image
           style={styles.image}
@@ -485,5 +503,15 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 14,
     fontWeight: 'bold',
+  },
+  topButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+    marginBottom: 8,
+  },
+  favoriteButtonDetail: {
+    padding: 8,
   },
 });

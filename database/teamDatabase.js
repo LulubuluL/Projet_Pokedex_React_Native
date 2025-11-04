@@ -18,6 +18,12 @@ export async function initDatabase() {
       species_url TEXT,
       added_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
+
+    CREATE TABLE IF NOT EXISTS favorites (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      pokemon_id INTEGER NOT NULL UNIQUE,
+      added_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
   `);
   
   return db;
@@ -77,4 +83,32 @@ export async function getTeamCount() {
   const database = await initDatabase();
   const result = await database.getFirstAsync('SELECT COUNT(*) as count FROM user_teams');
   return result.count;
+}
+
+export async function addToFavorites(pokemonId) {
+  const database = await initDatabase();
+  await database.runAsync(
+    'INSERT OR IGNORE INTO favorites (pokemon_id) VALUES (?)',
+    [pokemonId]
+  );
+}
+
+export async function removeFromFavorites(pokemonId) {
+  const database = await initDatabase();
+  await database.runAsync('DELETE FROM favorites WHERE pokemon_id = ?', [pokemonId]);
+}
+
+export async function isFavorite(pokemonId) {
+  const database = await initDatabase();
+  const result = await database.getFirstAsync(
+    'SELECT COUNT(*) as count FROM favorites WHERE pokemon_id = ?',
+    [pokemonId]
+  );
+  return result.count > 0;
+}
+
+export async function getAllFavorites() {
+  const database = await initDatabase();
+  const result = await database.getAllAsync('SELECT pokemon_id FROM favorites ORDER BY added_at DESC');
+  return result.map(row => row.pokemon_id);
 }

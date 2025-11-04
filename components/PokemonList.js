@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   TouchableOpacity 
 } from "react-native";
+import { Ionicons } from '@expo/vector-icons';
 import PokemonCard from "./PokemonCard";
 import TypeFilter from "./TypeFilter";
 import SearchBar from "./SearchBar";
@@ -16,6 +17,7 @@ import {
   setCachedPokemonList,
   clearPokemonCache 
 } from "../services/pokemonCache";
+import { useFavorites } from "../contexts/FavoritesContext";
 
 export default function PokemonList() {
   const [pokemonList, setPokemonList] = useState([]);
@@ -25,6 +27,8 @@ export default function PokemonList() {
   const [selectedTypes, setSelectedTypes] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [fromCache, setFromCache] = useState(false);
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const { favorites } = useFavorites();
 
   useEffect(() => {
     loadPokemonList();
@@ -32,7 +36,7 @@ export default function PokemonList() {
 
   useEffect(() => {
     applyFilters();
-  }, [selectedTypes, searchQuery, pokemonList]);
+  }, [selectedTypes, searchQuery, pokemonList, showFavoritesOnly, favorites]);
 
   async function loadPokemonList() {
     try {
@@ -99,6 +103,10 @@ export default function PokemonList() {
   function applyFilters() {
     let result = [...pokemonList];
 
+    if (showFavoritesOnly) {
+      result = result.filter(pokemon => favorites.includes(pokemon.id));
+    }
+
     if (selectedTypes.length > 0) {
       result = result.filter((pokemon) =>
         selectedTypes.every((selectedType) => pokemon.types.includes(selectedType))
@@ -163,6 +171,28 @@ export default function PokemonList() {
         onChangeText={setSearchQuery}
         onClear={handleSearchClear}
       />
+
+      <View style={styles.favoritesFilterContainer}>
+        <TouchableOpacity
+          style={[
+            styles.favoritesFilter,
+            showFavoritesOnly && styles.favoritesFilterActive
+          ]}
+          onPress={() => setShowFavoritesOnly(!showFavoritesOnly)}
+        >
+          <Ionicons 
+            name="star" 
+            size={20} 
+            color={showFavoritesOnly ? "#FFD700" : "#666"} 
+          />
+          <Text style={[
+            styles.favoritesFilterText,
+            showFavoritesOnly && styles.favoritesFilterTextActive
+          ]}>
+            Favoris uniquement
+          </Text>
+        </TouchableOpacity>
+      </View>
       
       <TypeFilter
         selectedTypes={selectedTypes}
@@ -257,5 +287,32 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: 'bold',
     fontSize: 16,
+  },
+  favoritesFilterContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  favoritesFilter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f0f0f0',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    alignSelf: 'flex-start',
+  },
+  favoritesFilterActive: {
+    backgroundColor: '#FFF9E6',
+    borderWidth: 2,
+    borderColor: '#FFD700',
+  },
+  favoritesFilterText: {
+    marginLeft: 8,
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#666',
+  },
+  favoritesFilterTextActive: {
+    color: '#333',
   },
 });

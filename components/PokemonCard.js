@@ -1,6 +1,8 @@
 import { TouchableOpacity, Image, Text, StyleSheet, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { getGeneration } from "../constants/pokemonTypes";
+import { useFavorites } from "../contexts/FavoritesContext";
+import { Ionicons } from '@expo/vector-icons';
 
 function capitalize(str) {
   return str.charAt(0).toUpperCase() + str.slice(1);
@@ -9,6 +11,13 @@ function capitalize(str) {
 export default function PokemonCard({ pokemon }) {
   const navigation = useNavigation();
   const generation = getGeneration(pokemon.id);
+  const { isFavorite, toggleFavorite } = useFavorites();
+  const favorite = isFavorite(pokemon.id);
+  
+  function handleFavoritePress(e) {
+    e.stopPropagation();
+    toggleFavorite(pokemon.id);
+  }
   
   return (
     <TouchableOpacity
@@ -22,6 +31,17 @@ export default function PokemonCard({ pokemon }) {
       <View style={[styles.genBadge, { backgroundColor: generation.color }]}>
         <Text style={styles.genText}>Gen {generation.id}</Text>
       </View>
+      
+      <TouchableOpacity 
+        style={styles.favoriteButton}
+        onPress={handleFavoritePress}
+      >
+        <Ionicons 
+          name={favorite ? "star" : "star-outline"} 
+          size={24} 
+          color={favorite ? "#FFD700" : "#999"} 
+        />
+      </TouchableOpacity>
       
       <Image
         style={styles.cardImage}
@@ -61,6 +81,13 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 10,
     fontWeight: 'bold',
+  },
+  favoriteButton: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    zIndex: 1,
+    padding: 4,
   },
   cardImage: {
     width: 100,
